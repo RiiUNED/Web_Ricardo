@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ricardo Sánchez</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="./recursos/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- 1. CABECERA CON FONDO OSCURO (#0F172A) -->
+    <header class="section-dark site-header">
+      <div class="container header-container">
+        <!-- Logo: Marca con prompt en Cian -->
+        <a href="index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> Ricardo Sánchez
+        </a>
+
+        <!-- Navegación: "Linux Lab" destacado en Cian si se está en esa sección -->
+        <nav>
+          <a href="index.html">Inicio</a>
+          <a href="lab.html" class="active">Linux Lab</a>
+          <a href="proyectos.html">Proyectos</a>
+          <a href="cv.html">CV</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- CUERPO CENTRAL (Fondo claro #FAFAFA para lectura) -->
+    <!-- Aplica la clase main-content en <main> para empujar todo el bloque hacia abajo -->
+    <main class="main-content">
+      <div class="container">
+        <!-- 1. QUIÉN SOY & 2. QUÉ PUESTO BUSCO (Contenido original sin cambios) -->
+        <section>
+          <h1>Linux · NOC/SOC · Soporte Técnico</h1>
+          <p class="lead-text">
+            Graduado en <strong>Ingeniería Informática</strong> por la UNED
+            enfocado en:
+          </p>
+
+          <ul class="custom-list">
+            <li><strong>Administración Linux Junior</strong></li>
+            <li><strong>NOC / SOC Nivel 1</strong></li>
+            <li><strong>Soporte Técnico y Service Desk</strong></li>
+          </ul>
+        </section>
+
+        <hr />
+
+        <!-- 3. QUÉ SÉ HACER (Prioridades profesionales) -->
+        <section>
+          <h2>Competencias</h2>
+
+          <div class="grid-cards">
+            <article class="card">
+              <span class="tag">SISTEMAS LINUX</span>
+              <h3>Administración Linux Junior</h3>
+              <p>
+                Gestión de servidores Ubuntu/Debian, supervisión de procesos,
+                creación de demonios con <code>systemd</code>, scripting en Bash
+                y gestión de almacenamiento.
+              </p>
+            </article>
+
+            <article class="card">
+              <span class="tag">OPERACIONES &amp; NOC / SOC</span>
+              <h3>Operaciones &amp; Monitorización</h3>
+              <p>
+                Supervisión de consola, triaje inicial de alertas de red y
+                seguridad, resolución de incidencias en tiempo real y escalado
+                bajo SLA.
+              </p>
+            </article>
+
+            <article class="card">
+              <span class="tag">SOPORTE TÉCNICO</span>
+              <h3>Service Desk &amp; Ticketing</h3>
+              <p>
+                Atención directa a incidencias corporativas, control de accesos,
+                gestión de ticketing y soporte operativo inicial a usuarios e
+                infraestructura.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 5. DÓNDE ESTÁN LAS PRUEBAS -->
+        <section>
+          <h2>Portfolio</h2>
+          <p class="subtext-tertiary">
+            Puedes verificar mis competencias técnicas directamente en la
+            documentación de mis entornos de laboratorio y código fuente:
+          </p>
+
+          <div class="portfolio-actions">
+            <div class="portfolio-action-row">
+              <a href="lab.html" class="btn-primary">Explorar Linux Lab</a>
+              <span class="portfolio-action-desc">
+                Runbooks prácticos 
+              </span>
+            </div>
+
+            <div class="portfolio-links-group">
+              <a href="proyectos.html" class="prompt-link"> &gt;_ Proyectos </a>
+              <a href="cv.html" class="prompt-link"> &gt;_ Consultar CV </a>
+            </div>
+          </div>
+        </section>
+
+        <hr />
+
+        <!-- 6. DISPONIBILIDAD (Cierre práctico) -->
+        <section>
+          <div class="callout-box">
+            <h3>&gt;_ Disponibilidad Operativa</h3>
+            <p>
+              Plena disponibilidad para incorporarme a
+              <strong
+                >turnos operativos, rotativos o nocturnos, así como cobertura en
+                fines de semana y festivos</strong
+              >
+              según las necesidades de la infraestructura.
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
+</html>
