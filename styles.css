@@ -96,6 +96,7 @@ p {
 }
 
 .subtext-tertiary {
+  margin-top: 1.5rem;
   color: var(--text-tertiary);
   margin-bottom: 1.5rem;
 }

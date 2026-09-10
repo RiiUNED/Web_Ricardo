@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linux Lab | Entorno de pruebas</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../recursos/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> Ricardo Sánchez
+        </a>
+        <nav>
+          <a href="../main.html">Inicio</a>
+          <a href="linux-lab.html" class="active">Linux Lab</a>
+          <a href="proyectos.html">Proyectos</a>
+          <a href="cv.html">CV</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="container">
+        <!-- INTRODUCCIÓN AL LAB -->
+        <section>
+          <h1>Linux Lab</h1>
+          <p class="lead-text">
+            Entorno de pruebas y laboratorios prácticos sobre:
+          </p>
+          <ul class="custom-list">
+            <li><strong>Administración de sistemas Linux</strong></li>
+            <li><strong>Diagnóstico de incidencias</strong></li>
+            <li><strong>Operaciones de infraestructura</strong></li>
+          </ul>
+          <p class="subtext-tertiary">
+            Documentación técnica estructurada en módulos para el registro de
+            runbooks, comandos esenciales y laboratorios ejecutados en entornos
+            virtuales Ubuntu Server.
+          </p>
+        </section>
+
+        <hr />
+
+        <!-- LISTADO DE MÓDULOS -->
+        <section>
+          <h2>Módulos del Laboratorio</h2>
+
+          <div class="grid-cards">
+            <!-- Módulo 1 -->
+            <article class="card">
+              <h3>
+                <a href="modulo1.html" class="prompt-link">
+                  Módulo 1. Procesos y señales
+                </a>
+              </h3>
+              <p>
+                Supervisión de procesos, gestión de señales (SIGTERM, SIGKILL),
+                trabajos en segundo plano (`bg`/`fg`), `nohup` y análisis de
+                consumo de recursos.
+              </p>
+            </article>
+
+            <!-- Módulo 2 -->
+            <article class="card">
+              <h3>
+                <a href="modulo2.html" class="prompt-link">
+                  Módulo 2. Usuarios y permisos
+                </a>
+              </h3>
+              <p>
+                Gestión de cuentas de usuario, grupos, permisos POSIX
+                (`chmod`/`chown`), bits especiales (SUID, SGID, Sticky Bit) y
+                configuración de `sudoers`.
+              </p>
+            </article>
+
+            <!-- Módulo 3 -->
+            <article class="card">
+              <h3>
+                <a href="modulo3.html" class="prompt-link">
+                  Módulo 3. Discos y LVM
+                </a>
+              </h3>
+              <p>
+                Particionado, sistemas de archivos, montaje (`fstab`),
+                administración de volúmenes lógicos con LVM (PV, VG, LV) y
+                extensión de almacenamiento en caliente.
+              </p>
+            </article>
+
+            <!-- Módulo 4 -->
+            <article class="card">
+              <h3>
+                <a href="modulo4.html" class="prompt-link">
+                  Módulo 4. Systemd y Servicios
+                </a>
+              </h3>
+              <p>
+                Creación de servicios personalizados (unidades `.service`),
+                gestión de daemons con `systemctl`, target runs y automatización
+                de arranque.
+              </p>
+            </article>
+
+            <!-- Módulo 5 -->
+            <article class="card">
+              <h3>
+                <a href="modulo5.html" class="prompt-link">
+                  Módulo 5. Logs y diagnóstico
+                </a>
+              </h3>
+              <p>
+                Análisis del sistema mediante `journalctl`, inspección de
+                registros en `/var/log`, rotación con `logrotate` y resolución
+                de incidencias de arranque.
+              </p>
+            </article>
+
+            <!-- Módulo 6 -->
+            <article class="card">
+              <h3>
+                <a href="modulo6.html" class="prompt-link">
+                  Módulo 6. Networking avanzado
+                </a>
+              </h3>
+              <p>
+                Configuración de interfaces, enrutamiento, diagnóstico de red
+                (`ip`, `ss`, `netstat`, `tcpdump`), reglas de cortafuegos
+                (`ufw`/`iptables`) y resolución DNS.
+              </p>
+            </article>
+
+            <!-- Módulo 7 -->
+            <article class="card">
+              <h3>
+                <a href="modulo7.html" class="prompt-link">
+                  Módulo 7. SSH y remoto
+                </a>
+              </h3>
+              <p>
+                Bastionamiento de SSH, autenticación mediante claves
+                públicas/privadas, túneles, reenvío de puertos y transferencia
+                segura de archivos (`rsync`/`scp`).
+              </p>
+            </article>
+
+            <!-- Módulo 8 -->
+            <article class="card">
+              <h3>
+                <a href="modulo8.html" class="prompt-link">
+                  Módulo 8. Shell Scripting
+                </a>
+              </h3>
+              <p>
+                Automatización de tareas operativas en Bash, tratamiento de
+                variables, estructuras de control, manejo de argumentos e
+                integración con cron jobs.
+              </p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
+</html>
