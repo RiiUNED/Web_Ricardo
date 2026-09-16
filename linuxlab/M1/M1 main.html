@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linux Lab | M1 Procesos y Señales</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../../recursos/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../../styles.css" />
+  </head>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="M1 main.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> M1 Procesos y Señales
+        </a>
+        <nav>
+          <a href="../../main.html">Inicio</a>
+          <a href="../LL main.html" class="active">Linux Lab</a>
+          <a href="proyectos.html">Proyectos</a>
+          <a href="cv.html">CV</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="container">
+        <!-- INTRODUCCIÓN AL MÓDULO-->
+        <section>
+          <h1>Módulo 1. Procesos y señales</h1>
+          <p class="lead-text">Laboratorios prácticos sobre:</p>
+          <ul class="custom-list">
+            <li><strong>Supervisión de procesos</strong></li>
+            <li><strong>Gestión de señales (SIGTERM, SIGKILL)</strong></li>
+            <li>
+              <strong
+                >Trabajos en segundo plano <code>bg</code>
+                <code>fg</code></strong
+              >
+            </li>
+            <li><strong>Análisis y consumo de recursos</strong></li>
+          </ul>
+          <p class="subtext-tertiary">
+            Se inspecciona la tabla de procesos y se supervisan recursos. Se
+            practica la intercepción de señales (como SIGTERM o SIGKILL), el
+            manejo de ejecuciones en segundo plano
+            (<code>bg</code>>/<code>fg</code>) y la inmunización mediante
+            <code>nohup</code> para garantizar la continuidad operacional.
+          </p>
+        </section>
+
+        <hr />
+
+        <!-- LISTADO DE MÓDULOS -->
+        <section>
+          <h2>Laboratorios del módulo</h2>
+
+          <div class="grid-cards">
+            <!-- L M1C1 Señales -->
+            <article class="card">
+              <span class="tag">M1C1</span>
+              <span class="tag">CONCEPTOS</span>
+              <h3>
+                <a href="L M1C1.html" class="prompt-link"> Señales </a>
+              </h3>
+              <p>
+                Investigación experimental del mecanismo de señales Linux y
+                observación de cómo los procesos modifican su comportamiento
+                antes una señal con un <em>signal handler</em>.
+              </p>
+            </article>
+
+            <!-- L M1C2 Background y Daemon -->
+            <article class="card">
+              <span class="tag">M1C2</span>
+              <span class="tag">CONCEPTOS</span>
+              <h3>
+                <a href="L M1C2.html" class="prompt-link">
+                  Background y Daemon
+                </a>
+              </h3>
+              <p>
+                Análisis del ciclo de vida de procesos en Linux, comparando la
+                captura de señales, ejecuciones en
+                <em>background</em>/<code>nohup</code> y la creación de
+                servicios persistentes desacoplados en <code>systemd</code>.
+              </p>
+            </article>
+
+            <!-- L M1T1 Resolución de bloqueos en Systemd. Captura de señales -->
+            <article class="card">
+              <span class="tag">M1T1</span>
+              <span class="tag">TROUBLESHOOTING</span>
+              <h3>
+                <a href="L M1T1.html" class="prompt-link">
+                  Resolución de bloqueos en Systemd <br> Captura de señales
+                </a>
+              </h3>
+              <p>
+                Diagnóstico y resolución de bloqueos en <code>systemd</code> por
+                la captura incorrecta de SIGTERM y bucles de reinicio automático
+                tras ejecutar <code>kill -9</code>.
+              </p>
+            </article>
+
+            <!-- L M1T2 Diaganóstico de procesos zombie. Fugas de FD e inspección de I/O -->
+            <article class="card">
+              <span class="tag">M1T2</span>
+              <span class="tag">TROUBLESHOOTING</span>
+              <h3>
+                <a href="L M1T1.html" class="prompt-link">
+                  Diaganóstico de procesos zombie <br />
+                  Fugas de FD e inspección de I/O
+                </a>
+              </h3>
+              <p>
+                Análisis de procesos zombie, fugas de descriptores de archivo e
+                inspección de llamadas al sistema con <code>strace</code> para
+                diagnosticar recursos y tiempos de espera.
+              </p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
+</html>
