@@ -3,35 +3,36 @@
    ========================================================================== */
 
 /* 1. IMPORTACIÓN DE FUENTES (Ubuntu & Ubuntu Mono) */
-@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap");
 
 /* 2. VARIABLES GLOBALES / SISTEMA DE DISEÑO */
 :root {
   /* --- A. NEUTROS, FONDO Y BORDES --- */
-  --bg-main: #FAFAFA;            /* Blanco roto principal */
-  --bg-surface: #F8FAFC;         /* Tarjetas, bloques y zonas diferenciadas (Slate 50) */
-  --border-subtle: #E2E8F0;      /* Separadores suaves (Slate 200) */
-  --border-strong: #CBD5E1;      /* Bordes y divisores marcados (Slate 300) */
+  --bg-main: #fafafa; /* Blanco roto principal */
+  --bg-surface: #f8fafc; /* Tarjetas, bloques y zonas diferenciadas (Slate 50) */
+  --border-subtle: #e2e8f0; /* Separadores suaves (Slate 200) */
+  --border-strong: #cbd5e1; /* Bordes y divisores marcados (Slate 300) */
 
   /* --- B. ESTRUCTURA Y TEXTO (#0F172A / Slate Family) --- */
-  --text-main: #0F172A;          /* Texto principal y títulos (Slate 900) */
-  --text-muted: #334155;         /* Texto secundario (Slate 700) */
-  --text-tertiary: #64748B;      /* Metadatos, fechas y descripciones (Slate 500) */
-  
-  --bg-dark: #0F172A;            /* Cabecera, footer y bloques oscuros */
-  --text-on-dark: #F8FAFC;       /* Texto invertido para zonas oscuras */
+  --text-main: #0f172a; /* Texto principal y títulos (Slate 900) */
+  --text-muted: #334155; /* Texto secundario (Slate 700) */
+  --text-tertiary: #64748b; /* Metadatos, fechas y descripciones (Slate 500) */
+
+  --bg-dark: #0f172a; /* Cabecera, footer y bloques oscuros */
+  --text-on-dark: #f8fafc; /* Texto invertido para zonas oscuras */
 
   /* --- C. IDENTIDAD E INTERACCIÓN (#22D3EE / Cyan Family) --- */
-  --brand-primary: #22D3EE;      /* Color de marca y acento (Cyan 400) */
-  --brand-hover: #0891B2;        /* Estados hover / énfasis (Cyan 600) */
-  --brand-active: #0E7490;       /* Estados activos con contraste (Cyan 700) */
-  
-  --brand-bg-light: #ECFEFF;     /* Destacados muy suaves / etiquetas (Cyan 50) */
-  --brand-bg-highlight: #CFFAFE;  /* Fondos de resaltado (Cyan 100) */
+  --brand-primary: #22d3ee; /* Color de marca y acento (Cyan 400) */
+  --brand-hover: #0891b2; /* Estados hover / énfasis (Cyan 600) */
+  --brand-active: #0e7490; /* Estados activos con contraste (Cyan 700) */
+
+  --brand-bg-light: #ecfeff; /* Destacados muy suaves / etiquetas (Cyan 50) */
+  --brand-bg-highlight: #cffafe; /* Fondos de resaltado (Cyan 100) */
 
   /* --- D. TIPOGRAFÍA --- */
-  --font-sans: 'Ubuntu', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: 'Ubuntu Mono', 'Courier New', Courier, monospace;
+  --font-sans:
+    "Ubuntu", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Ubuntu Mono", "Courier New", Courier, monospace;
 
   /* --- E. ESPACIADO Y BORDES --- */
   --radius-sm: 4px;
@@ -40,7 +41,9 @@
 }
 
 /* 3. RESETEO BASE Y LAYOUT GENERAL */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -53,7 +56,7 @@ body {
   font-size: 1rem;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  
+
   /* Layout de alto completo para empujar el footer al final */
   display: flex;
   flex-direction: column;
@@ -73,18 +76,45 @@ main.main-content,
 }
 
 /* 4. TIPOGRAFÍA Y ENCABEZADOS */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--text-main);
   font-weight: 700;
   line-height: 1.25;
 }
 
-h1 { font-size: 2.25rem; margin-top: 0; margin-bottom: 1rem; }
-h2 { font-size: 1.75rem; border-bottom: 1px solid var(--border-strong); padding-bottom: 0.5rem; margin-top: 2rem; margin-bottom: 1.25rem; }
-h3 { font-size: 1.35rem; margin-top: 1.5rem; margin-bottom: 0.75rem; }
+h1 {
+  font-size: 2.25rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+h2 {
+  font-size: 1.75rem;
+  border-bottom: 1px solid var(--border-strong);
+  padding-bottom: 0.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1.25rem;
+}
+h3 {
+  font-size: 1.35rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+h4 {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
 
 p {
-  color: var(--text-muted);
+  color: var(--text-main);
+  font-size: 1.05rem;
+  line-height: 1.8;
   margin-bottom: 1.25rem;
 }
 
@@ -161,7 +191,7 @@ pre code {
   border: none;
 }
 
-/* Único elemento con color Cian estricto */
+/* Elementos de identidad y acento en Cian */
 .prompt-symbol {
   color: var(--brand-primary);
   font-weight: bold;
@@ -227,6 +257,19 @@ header.site-header nav a {
 header.site-header nav a.active {
   color: var(--brand-primary);
   font-weight: 700;
+}
+
+/* Agrupación del título de la cabecera */
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Espacio entre bloques */
+}
+
+.brand-subtitle {
+  color: var(--text-on-dark); /* Tono suave para el texto sin enlace */
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
 }
 
 /* GRIDS Y TARJETAS */
@@ -304,8 +347,8 @@ header.site-header nav a.active {
   color: var(--text-on-dark);
 }
 
-.section-dark h1, 
-.section-dark h2, 
+.section-dark h1,
+.section-dark h2,
 .section-dark h3 {
   color: var(--text-on-dark);
 }
@@ -317,21 +360,23 @@ header.site-header nav a.active {
 /* BOTÓN PRIMARIO */
 .btn-primary {
   display: inline-block;
-  background-color: #0891B2;
-  color: #FFFFFF;
+  background-color: #0891b2;
+  color: #ffffff;
   font-family: var(--font-sans);
   font-weight: 500;
   padding: 0.6rem 1.25rem;
   border-radius: var(--radius-sm);
-  border: 1px solid #0891B2;
+  border: 1px solid #0891b2;
   cursor: pointer;
-  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+  transition:
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
 }
 
 .btn-primary:hover {
-  background-color: #0E7490;
-  border-color: #0E7490;
-  color: #FFFFFF;
+  background-color: #0e7490;
+  border-color: #0e7490;
+  color: #ffffff;
   text-decoration: none;
 }
 
@@ -351,6 +396,47 @@ header.site-header nav a.active {
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-sm);
   margin-right: 0.5rem;
+}
+
+/* ==========================================================================
+   TABLAS TÉCNICAS REUTILIZABLES
+   ========================================================================== */
+
+/* Contenedor adaptativo para permitir scroll en pantallas pequeñas */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+/* Estructura base de la tabla */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--bg-surface);
+}
+
+/* Celdas y cuadrícula estilo técnico */
+table th,
+table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid var(--border-subtle);
+  font-size: 0.95rem;
+}
+
+/* Encabezado con buen contraste */
+table th {
+  background-color: #e2e8f0; /* Slate 200 */
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+/* Alternancia de filas para mejor lectura de datos */
+table tr:nth-child(odd) {
+  background-color: #ffffff;
 }
 
 /* FOOTER */
@@ -401,8 +487,12 @@ footer.site-footer .copyright {
 
 /* 7. ADAPTACIÓN RESPONSIVE */
 @media (max-width: 768px) {
-  h1 { font-size: 1.75rem; }
-  h2 { font-size: 1.4rem; }
+  h1 {
+    font-size: 1.75rem;
+  }
+  h2 {
+    font-size: 1.4rem;
+  }
 
   header.site-header .header-container {
     flex-direction: column;
