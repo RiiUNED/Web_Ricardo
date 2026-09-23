@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Linux Lab | M1C1 Señales</title>
     <!-- Icono para la pestaña del navegador (Favicon) -->
-    <link rel="icon" type="image/png" href="../../../recursos/Logo.png" />
+    <link rel="icon" type="image/png" href="../../../img/Logo.png" />
     <!-- Hoja de estilos compartida -->
     <link rel="stylesheet" href="../../../styles.css" />
   </head>
@@ -13,14 +13,14 @@
     <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
     <header class="site-header section-dark">
       <div class="container header-container">
-        <a href="../M1 main.html" class="brand-logo">
+        <a href="../M1 index.html" class="brand-logo">
           <span class="prompt-symbol">&gt;_</span> M1 Procesos y Señales
         </a>
         <nav>
-          <a href="../../../main.html">Inicio</a>
-          <a href="../../../LL main.html" class="active">Linux Lab</a>
-          <a href="proyectos.html">Proyectos</a>
-          <a href="cv.html">CV</a>
+          <a href="../../../index.html">Inicio</a>
+          <a href="../../../linuxlab/LL index.html" class="active">Linux Lab</a>
+          <a href="../../../proyectos/P index.html">Proyectos</a>
+          <a href="../../../cv/CV index.html">CV</a>
         </nav>
       </div>
     </header>
@@ -34,21 +34,31 @@
           <p class="lead-text">
             Investigación experimental del mecanismo de señales.
           </p>
-          <h4>Relevancia operativa</h4>
-          <p>
-            Este laboratorio demuestra la capacidad práctica para identificar
-            procesos en ejecución mediante herramientas como
-            <code>pstree</code>, inspeccionar PIDs, intervenir sobre el flujo de
-            ejecución mediante el comando <code>kill</code> y analizar las
-            implicaciones del uso de cierres limpios (<code>SIGTERM</code>)
-            frente a la terminación forzada (<code>SIGKILL</code>) en entornos
-            de producción.
-          </p>
-          <p>
-            También demuestra la capacidad de investigar un comportamiento
-            inesperado y relacionarlo con las restricciones impuestas por el
-            sistema operativo
-          </p>
+          <!-- DISPONIBILIDAD (práctico para recruiter) -->
+          <section>
+            <div class="callout-box">
+              <span class="tag">process-management</span>
+              <span class="tag">linux-signals</span>
+              <span class="tag">sigterm-vs-sigkill</span>
+              <span class="tag">kernel-restrictions</span>
+              <span class="tag">system-diagnostics</span>
+              <h3>&gt;_ Relevancia Operativa</h3>
+              <p>
+                Este laboratorio demuestra la capacidad práctica para
+                identificar procesos en ejecución mediante herramientas como
+                <code>pstree</code>, inspeccionar PIDs, intervenir sobre el
+                flujo de ejecución mediante el comando <code>kill</code> y
+                analizar las implicaciones del uso de <code>SIGTERM</code>, que
+                permite al proceso gestionar una terminación ordenada, frente a
+                la terminación forzada mediante <code>SIGKILL</code>.
+              </p>
+              <p>
+                También demuestra la capacidad de investigar un comportamiento
+                inesperado y relacionarlo con las restricciones impuestas por el
+                sistema operativo
+              </p>
+            </div>
+          </section>
         </header>
 
         <hr />
@@ -168,7 +178,7 @@
           <pre><code>#!/usr/bin/env python3
 import sys, time
 print("Ejecución de test")
-if(len(sys.argv) &gt; 1):
+if len(sys.argv) &gt; 1:
     time.sleep(int(sys.argv[1]))
 print("Fin de la ejecución de test")</code></pre>
           <p>
@@ -186,7 +196,7 @@ def handler(signum, frame):
 
 signal.signal(signal.SIGTERM, handler)
 print("Ejecución de test")
-if(len(sys.argv) &gt; 1):
+if len(sys.argv) &gt; 1:
     time.sleep(int(sys.argv[1]))
 print("Fin de la ejecución de test")</code></pre>
           <p>
@@ -202,13 +212,15 @@ print("Fin de la ejecución de test")</code></pre>
         <!-- EXPERIMENTO 1 -->
         <section>
           <h2>Experimento 1 - SIGTERM</h2>
-          <h3>Hipótesis</h3>
-          <p>
-            <strong>Manejador SIGTERM:</strong> El proceso con
-            <em>handler</em> capturará la señal, imprimirá su identificador en
-            la salida estándar y continuará en ejecución hasta completar su
-            tiempo de suspensión.
-          </p>
+          <div class="card">
+            <h3>Hipótesis</h3>
+            <p>
+              <strong>Manejador SIGTERM:</strong> El proceso con
+              <em>handler</em> capturará la señal, imprimirá su identificador en
+              la salida estándar y continuará en ejecución hasta completar su
+              tiempo de suspensión.
+            </p>
+          </div>
 
           <hr />
 
@@ -221,7 +233,8 @@ print("Fin de la ejecución de test")</code></pre>
             <li><code>pts/1</code>: Ejecución del proceso bajo prueba.</li>
             <li><code>pts/0</code>: Inspección de PID y emisión de señales.</li>
           </ul>
-
+          <hr />
+          <h3>Intervención sin <em>handler</em>:</h3>
           <h4>1. Ejecución del proceso de control desde <code>pts/1</code></h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.1/testNoH.py 180
 Ejecución de test</code></pre>
@@ -246,7 +259,7 @@ Terminated</code></pre>
           <h3>Intervención con <em>handler</em></h3>
 
           <h4>
-            1. Ejecución del programa con <em>handler</em> desde
+            1. Ejecución del proceso con <em>handler</em> desde
             <code>pts/1</code>
           </h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.1/testH.py 180
@@ -315,7 +328,7 @@ Fin de la ejecución de test</code></pre>
           <p>
             En la salida estándar que recibe información del proceso, se imprime
             el código de la señal, pero el proceso no termina al recibir la
-            señal, termina de forma natural cuando han pasado los 3 minutoa que
+            señal, termina de forma natural cuando han pasado los 3 minutos que
             se le pidió que estuviera dormido.
           </p>
 
@@ -326,13 +339,15 @@ Fin de la ejecución de test</code></pre>
 
           <hr />
 
-          <h3>Conclusión</h3>
-          <p>
-            <strong>Se cumple la hipótesis de partida</strong><br />El proceso
-            con <em>handler</em> capturará la señal, imprimirá su identificador
-            en la salida estándar y continuará en ejecución hasta completar su
-            tiempo de suspensión.
-          </p>
+          <div class="card">
+            <h3>Conclusión</h3>
+            <p>
+              <strong>Se cumple la hipótesis de partida</strong><br />El proceso
+              con <em>handler</em> capturará la señal, imprimirá su
+              identificador en la salida estándar y continuará en ejecución
+              hasta completar su tiempo de suspensión.
+            </p>
+          </div>
         </section>
 
         <hr />
@@ -340,13 +355,15 @@ Fin de la ejecución de test</code></pre>
         <!-- EXPERIMENTO 2 -->
         <section>
           <h2>Experimento 2 - SIGKILL</h2>
-          <h3>Hipótesis</h3>
-          <p>
-            <strong>Manejador SIGKILL / SIGSTOP:</strong> El proceso mantendrá
-            el comportamiento por defecto del kernel, ignorando al
-            <em>manejador</em>
-            definido en el código.
-          </p>
+          <div class="card">
+            <h3>Hipótesis</h3>
+            <p>
+              <strong>Manejador SIGKILL / SIGSTOP:</strong> El proceso mantendrá
+              el comportamiento por defecto del kernel, ignorando al
+              <em>manejador</em>
+              definido en el código.
+            </p>
+          </div>
           <hr />
 
           <h3>Preparación</h3>
@@ -364,16 +381,16 @@ def handler(signum, frame):
 
 signal.signal(signal.SIGKILL, handler)
 print("Ejecución de test")
-if(len(sys.argv) &gt; 1):
+if len(sys.argv) &gt; 1:
     time.sleep(int(sys.argv[1]))
 print("Fin de la ejecución de test")</code></pre>
 
           <hr />
 
-          <h3>Acción y resultado</h3>
+          <h3>Intervención y resultado</h3>
           <p>
-            El intérprete de Python impide la ejecución del proceso
-            indentificando un error en el código
+            El intérprete de Python impide la ejecución del proceso al detectar
+            un error al registrar el manejador.
           </p>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.1/testH.py 180
 Traceback (most recent call last):
@@ -423,12 +440,18 @@ OSError: [Errno 22] Invalid argument</code></pre>
 
           <hr />
 
-          <h3>Conclusión</h3>
-          <p>
-            <strong>No se cumple la hipótesis de partida</strong><br />Ni el
-            kernel de Linux ni los intérpretes de alto nivel permiten capturar,
-            modificar ni ignorar la señal <code>SIGKILL</code>.
-          </p>
+          <div class="card">
+            <h3>Conclusión</h3>
+            <p>
+              <strong
+                >La hipótesis no puede verificarse en los términos
+                planteados</strong
+              ><br />El proceso no llega a ejecutarse porque el intento de
+              registrar un <em>handler</em> para <code>SIGKILL</code> es
+              rechazado. El resultado confirma que <code>SIGKILL</code> no puede
+              ser capturada mediante un manejador de señales.
+            </p>
+          </div>
         </section>
 
         <hr />
@@ -436,25 +459,35 @@ OSError: [Errno 22] Invalid argument</code></pre>
         <!-- EXPERIMENTO 3 -->
         <section>
           <h2>
-            Experimento 3 - Envió de SIGKILL a un proceso con handler SIGTERM
+            Experimento 3 - Envío de SIGKILL a un proceso con handler SIGTERM
           </h2>
 
-          <h3>Hipótesis</h3>
-          <p>
-            <strong
-              >Manejador <code>SIGTERM</code> y señal
-              <code>SIGKILL</code></strong
-            >: Al estar el <em>handler</em> definido exclusivamente para
-            <code>SIGTERM</code>, la recepción de <code>SIGKILL</code> no
-            ejecutará el <em>handler</em>; el proceso mantendrá el
-            comportamiento predeterminado asociado a <code>SIGKILL</code>, su
-            terminación inmediata.
-          </p>
+          <div class="card">
+            <h3>Hipótesis</h3>
+            <p>
+              <strong
+                >Manejador <code>SIGTERM</code> y señal
+                <code>SIGKILL</code></strong
+              >: Al estar el <em>handler</em> definido exclusivamente para
+              <code>SIGTERM</code>, la recepción de <code>SIGKILL</code> no
+              ejecutará el <em>handler</em>; el proceso mantendrá el
+              comportamiento predeterminado asociado a <code>SIGKILL</code>, su
+              terminación inmediata.
+            </p>
+          </div>
           <hr />
 
           <h3>Preparación</h3>
-          <p>Retomando el proceso original:</p>
-          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> cat linux-lab/101.1/testH.py
+          <p>
+            Se vuelven a emplear dos pseudoterminales independientes en la misma
+            máquina virtual:
+          </p>
+          <ul class="custom-list">
+            <li><code>pts/1</code>: Ejecución del proceso bajo prueba.</li>
+            <li><code>pts/0</code>: Inspección de PID y emisión de señales.</li>
+          </ul>
+          <h4>Retomando el proceso original:</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> cat linux-lab/l01.1/testH.py
 #!/usr/bin/env python3
 import sys, time, signal
 
@@ -463,43 +496,47 @@ def handler(signum, frame):
 
 signal.signal(signal.SIGTERM, handler)
 print("Ejecución de test")
-if(len(sys.argv)&gt;1):
+if len(sys.argv) &gt; 1:
     time.sleep(int(sys.argv[1]))
 print("Fin de la ejecución de test")</code></pre>
 
           <hr />
 
-          <h3>Acción y Resultado</h3>
+          <h3>Intervención y resultado</h3>
 
-          <h4>1. Ejecución en <code>pst/1</code>:</h4>
+          <h4>1. Ejecución en <code>pts/1</code>:</h4>
 
-          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/101.1/testH.py 180
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.1/testH.py 180
 Ejecución de test</code></pre>
 
           <h4>
             2. Envío de la señal <code>SIGKILL</code> desde <code>pts/0</code>:
           </h4>
 
-          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/101.1$</span> pstree -p -N user
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/l01.1$</span> pstree -p -N user
 [4026531837]
 bash(984)
 bash(1047)-pstree(2797)
 bash(1673)-python3(2796)
-<span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/101.1$</span> kill -9 2796</code></pre>
+<span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/l01.1$</span> kill -9 2796</code></pre>
 
           <h4>3. Comprobación del estado del proceso en <code>pts/1</code>:</h4>
-          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/101.1/testH.py 180
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.1/testH.py 180
 Ejecución de test
 Killed</code></pre>
 
           <hr />
-          <h3>Conclusión</h3>
-          <p>
-            <strong>Se cumple la hipótesis de partida</strong><br />El proceso
-            terminó al recibir la señal <code>SIGKILL</code> puesto que el
-            manejador de señalres se diseñó para modificar el comportamiento del
-            proceso con la señal <code>SIGTERM</code>.
-          </p>
+          <div class="card">
+            <h3>Conclusión</h3>
+            <p>
+              <strong>Se cumple la hipótesis de partida</strong><br />
+              Al estar el <em>handler</em> definido exclusivamente para
+              <code>SIGTERM</code>, la recepción de <code>SIGKILL</code> no
+              ejecutará el <em>handler</em>; el proceso mantendrá el
+              comportamiento predeterminado asociado a <code>SIGKILL</code>, su
+              terminación inmediata.
+            </p>
+          </div>
         </section>
 
         <hr />
@@ -569,32 +606,38 @@ Killed</code></pre>
             señales que no pueden ser capturadas ni ignoradas.
           </p>
           <p>
-            Se crearon procesos con manejadores de señales para distintas
-            señales y se hizo recibir a estos procesos distintas señales.
+            Se crearon procesos con manejadores de señales y se analizó su
+            comportamiento al recibir distintas señales, incluyendo el intento
+            de registrar un manejador para <code>SIGKILL</code>.
           </p>
           <p>
             Se observó cómo los procesos pueden modificar su comportamiento
             cuando tienen manejadores de señales y cómo algunas señales, SIGKILL
             en este laboratorio, no pueden ser capturadas ni ignoradas.
           </p>
-          <h4>Resumen:</h4>
-          <ul class="custom-list">
-            <li>
-              Las señales son el mecanismo estándar de notificación asíncrona
-              entre el kernel y los procesos en sistemas UNIX/Linux.
-            </li>
-            <li>
-              Un proceso puede interceptar señales estándar (como
-              <code>SIGTERM</code>) mediante manejadores para asegurar cierres
-              limpios o redefinir su respuesta.
-            </li>
-            <li>
-              Las señales <code>SIGKILL</code> y <code>SIGSTOP</code> están
-              protegidas a nivel del sistema operativo para permitir a los
-              administradores de sistemas y al propio kernel detener procesos
-              desbocados de forma determinista.
-            </li>
-          </ul>
+          <section>
+            <div class="card">
+              <h4>Resumen:</h4>
+              <ul class="custom-list">
+                <li>
+                  Las señales son el mecanismo estándar de notificación
+                  asíncrona entre el kernel y los procesos en sistemas
+                  UNIX/Linux.
+                </li>
+                <li>
+                  Un proceso puede interceptar señales estándar (como
+                  <code>SIGTERM</code>) mediante manejadores para asegurar
+                  cierres limpios o redefinir su respuesta.
+                </li>
+                <li>
+                  Las señales <code>SIGKILL</code> y <code>SIGSTOP</code> están
+                  protegidas a nivel del sistema operativo para permitir a los
+                  administradores de sistemas y al propio kernel detener
+                  procesos desbocados de forma determinista.
+                </li>
+              </ul>
+            </div>
+          </section>
         </section>
 
         <hr />
