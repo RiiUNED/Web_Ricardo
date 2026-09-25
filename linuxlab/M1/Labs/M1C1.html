@@ -61,25 +61,6 @@
           </section>
         </header>
 
-        <hr />
-
-        <!-- CONTEXTO Y ENTORNO -->
-        <section>
-          <h2>Contexto y entorno</h2>
-          <div class="card">
-            <ul class="custom-list">
-              <li>
-                <strong>Sistema Operativo:</strong> Ubuntu Server 24.04 LTS
-              </li>
-              <li><strong>Virtualización:</strong> Oracle VM VirtualBox</li>
-              <li><strong>Acceso:</strong> SSH (OpenSSH Server)</li>
-              <li><strong>Máquina virtual:</strong> <code>ubuntu-lab</code></li>
-              <li><strong>Usuario:</strong> <code>ricardo</code></li>
-              <li><strong>Entorno de ejecución:</strong> Python 3.12.3</li>
-            </ul>
-          </div>
-        </section>
-
         <!-- OBJETIVOS -->
         <section>
           <h2>Objetivos</h2>
@@ -207,8 +188,6 @@ print("Fin de la ejecución de test")</code></pre>
           </p>
         </section>
 
-        <hr />
-
         <!-- EXPERIMENTO 1 -->
         <section>
           <h2>Experimento 1 - SIGTERM</h2>
@@ -222,8 +201,6 @@ print("Fin de la ejecución de test")</code></pre>
             </p>
           </div>
 
-          <hr />
-
           <h3>Preparación</h3>
           <p>
             Se emplean dos pseudoterminales independientes en la misma máquina
@@ -233,7 +210,7 @@ print("Fin de la ejecución de test")</code></pre>
             <li><code>pts/1</code>: Ejecución del proceso bajo prueba.</li>
             <li><code>pts/0</code>: Inspección de PID y emisión de señales.</li>
           </ul>
-          <hr />
+
           <h3>Intervención sin <em>handler</em>:</h3>
           <h4>1. Ejecución del proceso de control desde <code>pts/1</code></h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.1/testNoH.py 180
@@ -253,8 +230,6 @@ bash(1673) python3(2678)</code></pre>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.1/testNoH.py 180
 Ejecución de test
 Terminated</code></pre>
-
-          <hr />
 
           <h3>Intervención con <em>handler</em></h3>
 
@@ -278,8 +253,6 @@ bash(1673)-python3(2694)
 Ejecución de test
 15
 Fin de la ejecución de test</code></pre>
-
-          <hr />
 
           <h3>Resultado observado</h3>
           <p>
@@ -306,8 +279,6 @@ Ejecución de test
 15
 Fin de la ejecución de test</code></pre>
           </ul>
-
-          <hr />
 
           <h3>Interpretación</h3>
 
@@ -337,8 +308,6 @@ Ejecución de test
 15
 Fin de la ejecución de test</code></pre>
 
-          <hr />
-
           <div class="card">
             <h3>Conclusión</h3>
             <p>
@@ -349,8 +318,6 @@ Fin de la ejecución de test</code></pre>
             </p>
           </div>
         </section>
-
-        <hr />
 
         <!-- EXPERIMENTO 2 -->
         <section>
@@ -364,7 +331,6 @@ Fin de la ejecución de test</code></pre>
               definido en el código.
             </p>
           </div>
-          <hr />
 
           <h3>Preparación</h3>
           <p>
@@ -385,8 +351,6 @@ if len(sys.argv) &gt; 1:
     time.sleep(int(sys.argv[1]))
 print("Fin de la ejecución de test")</code></pre>
 
-          <hr />
-
           <h3>Intervención y resultado</h3>
           <p>
             El intérprete de Python impide la ejecución del proceso al detectar
@@ -400,8 +364,6 @@ Traceback (most recent call last):
     handler = _signal.signal(_enum_to_int(signalnum), _enum_to_int(handler))
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 OSError: [Errno 22] Invalid argument</code></pre>
-
-          <hr />
 
           <h3>Investigación</h3>
           <p>
@@ -438,8 +400,6 @@ OSError: [Errno 22] Invalid argument</code></pre>
             operación.
           </p>
 
-          <hr />
-
           <div class="card">
             <h3>Conclusión</h3>
             <p>
@@ -453,8 +413,6 @@ OSError: [Errno 22] Invalid argument</code></pre>
             </p>
           </div>
         </section>
-
-        <hr />
 
         <!-- EXPERIMENTO 3 -->
         <section>
@@ -475,7 +433,6 @@ OSError: [Errno 22] Invalid argument</code></pre>
               terminación inmediata.
             </p>
           </div>
-          <hr />
 
           <h3>Preparación</h3>
           <p>
@@ -500,8 +457,6 @@ if len(sys.argv) &gt; 1:
     time.sleep(int(sys.argv[1]))
 print("Fin de la ejecución de test")</code></pre>
 
-          <hr />
-
           <h3>Intervención y resultado</h3>
 
           <h4>1. Ejecución en <code>pts/1</code>:</h4>
@@ -525,7 +480,6 @@ bash(1673)-python3(2796)
 Ejecución de test
 Killed</code></pre>
 
-          <hr />
           <div class="card">
             <h3>Conclusión</h3>
             <p>
@@ -538,8 +492,6 @@ Killed</code></pre>
             </p>
           </div>
         </section>
-
-        <hr />
 
         <!-- TABLA COMPARATIVA -->
         <section>
@@ -639,8 +591,6 @@ Killed</code></pre>
             </div>
           </section>
         </section>
-
-        <hr />
 
         <!-- EVIDENCIAS DE CONSOLA -->
         <section>

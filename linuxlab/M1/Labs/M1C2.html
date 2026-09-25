@@ -1,22 +1,781 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Visualización de Imagen</title>
-  <!-- Vinculación al archivo CSS externo -->
-  <link rel="stylesheet" href="../../../styles.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linux Lab | M1C2 Background y Daemon</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../../../img/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../../../styles.css" />
+  </head>
 
-  <main class="container">
-    <h1>M1C2. Estamos trabajando</h1>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="../M1 index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> M1 Procesos y Señales
+        </a>
+        <nav>
+          <a href="../../../index.html">Inicio</a>
+          <a href="../../../linuxlab/LL index.html" class="active">Linux Lab</a>
+          <a href="../../../proyectos/P index.html">Proyectos</a>
+          <a href="../../../cv/CV index.html">CV</a>
+        </nav>
+      </div>
+    </header>
 
-    <!-- Contenedor para centrar la imagen -->
-    <div class="img-container">
-      <img src="../../../img/obras.webp" alt="Imagen provisional">
-    </div>
-  </main>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="container">
+        <!-- ENCABEZADO Y METADATOS DEL LABORATORIO -->
+        <header class="lab-header">
+          <h1>Laboratorio M1C2 &#45; Background y Daemon</h1>
+          <p class="lead-text">
+            Investigación experimental de la persistencia de procesos y gestión
+            de servicios.
+          </p>
+          <!-- DISPONIBILIDAD (práctico para recruiter) -->
+          <section>
+            <div class="callout-box">
+              <span class="tag">process-management</span>
+              <span class="tag">linux-signals</span>
+              <span class="tag">systemd-services</span>
+              <span class="tag">session-isolation</span>
+              <span class="tag">system-diagnostics</span>
+              <h3>&gt;_ Relevancia Operativa</h3>
+              <p>
+                Este laboratorio demuestra la capacidad práctica para
+                diferenciar el control de procesos según su contexto de
+                ejecución y gestión, contrastando el comportamiento de procesos
+                interactivos en primer plano frente a aquellos desvinculados de
+                la sesión mediante
+                <code>nohup</code> o gestionados de forma centralizada como
+                servicios a través de <code>systemd</code>.
+              </p>
+              <p>
+                Asimismo, evidencia el análisis empírico de la terminación de
+                procesos mediante señales (como <code>SIGTERM</code> frente a
+                <code>SIGKILL</code>) y la interacción controlada con el ciclo
+                de vida del servicio mediante la herramienta
+                <code>systemctl</code>, permitiendo diagnosticar la relación de
+                dependencia entre los procesos, las sesiones de terminal y el
+                núcleo del sistema operativo.
+              </p>
+            </div>
+          </section>
+        </header>
+        <!-- OBJETIVOS -->
+        <section>
+          <h2>Objetivos</h2>
+          <ul class="custom-list">
+            <li>
+              <strong
+                >Analizar el comportamiento de los procesos frente al cierre de
+                sesiones</strong
+              >, evaluando el impacto de la desvinculación de la terminal (TTY)
+              mediante el uso de utilidades como <code>nohup</code>.
+            </li>
+            <li>
+              <strong
+                >Diferenciar la gestión operativa de procesos en segundo plano
+                frente a servicios persistentes</strong
+              >, contrastando el control directo sobre PIDs con la
+              administración centralizada a través de <code>systemd</code> y
+              <code>systemctl</code>.
+            </li>
+            <li>
+              <strong
+                >Investigar el ciclo de vida y la jerarquía de procesos</strong
+              >, identificando las variaciones en el identificador de proceso
+              padre (PPID) y la relación del entorno de ejecución con el núcleo
+              del sistema operativo.
+            </li>
+          </ul>
+        </section>
+        <!-- PROCESOS UTILIZADOS -->
+        <section>
+          <h2>Procesos utilizados</h2>
 
-</body>
+          <h3>Proceso de control <code>test.py</code></h3>
+          <pre><code>#!/usr/bin/env python3
+
+import os
+import time
+import sys
+
+try:
+    while True:
+        print(f"\nEjecutándose el proceso PID: {os.getpid()}\n")
+        time.sleep(20)
+
+except KeyboardInterrupt:
+    print("\n Proceso interrumpido por el usuario")
+    sys.exit(0)</code></pre>
+          <p>
+            Se ejecuta una suspensión temporal controlada que permite aislar,
+            enviar señales y verificar empíricamente el comportamiento y ciclo
+            de vida del proceso.
+          </p>
+          <ul class="custom-list">
+            <li>
+              El proceso escribe su PID y pasa el estado dormido un intervalo de
+              tiempo de forma initerrumpida.
+            </li>
+            <li>
+              El proceso debe ser interrumpido por el usuario. Idealmente,
+              mediante una señal enviada por el teclado.
+            </li>
+          </ul>
+
+          <h3>Servicio persistente <code>dtest.py</code></h3>
+          <pre><code>#!/usr/bin/env python3
+
+import os
+import time
+import sys
+
+log_file = open("proceso.log", "a", buffering=1)
+sys.stdout = log_file
+sys.stderr = log_file
+
+try:
+    while True:
+        print(f"\nEjecutándose el proceso PID: {os.getpid()}\n")
+        time.sleep(20)
+
+except KeyboardInterrupt:
+    print("\n Proceso interrumpido por el usuario")
+    log_file.close()
+    sys.exit(0)</code></pre>
+          <p>
+            El servico ejecuta un bucle infinito que registra su PID en un
+            archivo de <em>logs</em> cada 20 segundos para verificar
+            persistencia.
+          </p>
+          <h4>1. Configuración de la persistencia de <em>logs</em></h4>
+          <ul class="custom-list">
+            <li>
+              <code>log_file = open("proceso.log", "a", buffering=1)</code>:
+              Abre el archivo <code>proceso.log</code> en modo de adición
+              (<code>"a"</code>) habilitando el búfer de línea.
+            </li>
+            <li>
+              El parámetro <code>buffering=1</code> habilita el búfer de línea,
+              asegurando que cada mensaje se escriba inmediatamente en el
+              archivo sin esperar a que se llene la memoria intermedia
+            </li>
+          </ul>
+          <h4>2. Redirección de flujos estándar</h4>
+          <ul class="custom-list">
+            <li>
+              <code>sys.stdout = log_file</code> y
+              <code>sys.stderr = log_file</code>: Redirigen tanto la salida
+              estándar como los errores del script hacia el archivo de registro
+              en lugar de mostrarse en la pantalla o terminal interactiva.
+            </li>
+          </ul>
+          <h4>3. Bucle de ejecución continua <code>while True</code></h4>
+          <ul class="custom-list">
+            <li>
+              El bloque <code>try</code> inicia un ciclo infinito para simular
+              un demonio que no debe finalizar por sí solo.
+            </li>
+          </ul>
+          <h4>4. Emisión de actividad y pausa</h4>
+          <ul class="custom-list">
+            <li>
+              <code>print(...)</code>: Envía al archivo de registro un mensaje
+              indicando que el proceso sigue activo junto con su identificador
+              único (PID).
+            </li>
+            <li>
+              <code>time.sleep(20)</code>: Detiene la ejecución del script
+              durante 20 segundos.
+            </li>
+          </ul>
+          <h4>
+            5. Manejo de interrupciones <code>except KeyboardInterrupt</code>
+          </h4>
+          <ul class="custom-list">
+            <li>Captura la señal de interrupción enviada desde el teclado.</li>
+            <li>
+              Imprime un mensaje de aviso en el log, cierra de forma limpia el
+              descriptor del archivo <code>log_file.close()</code> para evitar
+              corrupción de datos y finaliza el proceso de manera controlada
+              <code>sys.exit(0)</code>.
+            </li>
+          </ul>
+        </section>
+
+        <!-- EXPERIMENTO 1 -->
+        <section>
+          <h2>Experimento 1 - Foreground</h2>
+
+          <h3>Preparación</h3>
+          <p>
+            Se emplean dos pseudoterminales independientes en la misma máquina
+            virtual:
+          </p>
+          <ul class="custom-list">
+            <li><code>pts/0</code>: Ejecución del proceso bajo prueba.</li>
+            <li><code>pts/1</code>: Inspección de PID.</li>
+          </ul>
+
+          <h3>Intervención y resultado</h3>
+          <h4>
+            1. Se ejecuta el proceso de control <code>test.py</code> desde
+            <code>pts/0</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.2/test.py
+Ejecutándose el proceso PID: 1873</code></pre>
+          <div class="card">
+            <strong>Observación</strong>. La terminal queda bloqueada por el
+            proceso.
+          </div>
+          <h4>
+            2. Inspección del proceso de control <code>test.py</code> desde
+            <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -o pid,ppid,stat=status,cmd=comando -p 1873
+PID PPID status comando
+1873 1121 S+ python3 ./linux-lab/l01.2/test.py</code></pre>
+          <h4>
+            3. Estado de <code>pts/0</code> e interrupción del proceso de
+            control <code>test.py</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.2/test.py
+Ejecutándose el proceso PID: 1873
+Ejecutándose el proceso PID: 1873
+Ejecutándose el proceso PID: 1873
+^C
+Proceso interrumpido por el usuario</code></pre>
+
+          <h3>Interpretación</h3>
+          <ol class="custom-list">
+            <li>
+              El proceso de control <code>test.py</code> tiene el PID 1872 y ha
+              sido lanzado por la terminal <code>pts/0</code>. Su estado es
+              <code>S+</code>, dormido en primer plano. con PID 1121
+            </li>
+            <li>
+              Al presionar
+              <code>Ctrl+C</code>, el controlador de la terminal en el núcleo
+              del sistema operativo envió la señal
+              <code>SIGINT</code>
+              al grupo de procesos en primer plano, finalizando su ejecución
+            </li>
+          </ol>
+        </section>
+
+        <!-- EXPERIMENTO 2 -->
+        <section>
+          <h2>
+            Experimento 2 - Background <code>&</code> y gestión de trabajos
+          </h2>
+
+          <h3>Preparación</h3>
+          <p>Se vuelve a emprear el proceso de control <code>test.py</code></p>
+          <ul class="custom-list">
+            <li><code>pts/0</code>: Ejecución del proceso bajo prueba.</li>
+            <li><code>pts/1</code>: Inspección de PID.</li>
+          </ul>
+          <h3>Intervención y resultado</h3>
+          <h4>
+            1. Se ejecuta el proceso de control <code>test.py</code> en segundo
+            plano desde
+            <code>pts/0</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.2/test.py &
+[1] 1912
+Ejecutándose el proceso PID: 1912</code></pre>
+          <div class="card">
+            <strong>Observación</strong>. La terminal no queda bloqueada por el
+            proceso.
+          </div>
+          <h4>
+            2. Gestión de trabajos <code>jobs</code> desde <code>pts/0</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> jobs
+[1]+ Running ./linux-lab/l01.2/test.py &</code></pre>
+          <h4>3. Inspección del proceso control desde <code>pts/1</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -o pid,ppid,stat=status,cmd=comando -p 1912
+PID PPID status comando
+1912 1121 S python3 ./linux-lab/l01.2/test.py</code></pre>
+          <h4>
+            4. Gestión de trabajos <code>jobs</code> desde <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ricardo@ubuntu-lab:~$ jobs
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span></code></pre>
+          <h3>Interpretación</h3>
+          <ul class="custom-list">
+            <li>
+              Al ejecutarse <code>./linux-lab/l01.2/test.py &amp;</code> desde
+              <code>pts/0</code>, la <em>shell</em> devolvió el
+              <em>prompt</em> inmediatamente y asignó un ID de trabajo y PID
+              (<code>[1] 1912</code>).
+            </li>
+            <li>
+              Al consultar <code>jobs</code> desde <code>pts/0</code>, la
+              <em>shell</em> confirmó la tarea en segundo plano, demostrando que
+              la terminal no quedó bloqueada.
+            </li>
+            <li>
+              Al ejecutar <code>jobs</code> desde la sesión SSH
+              <code>pts/1</code>, no se mostró el trabajo, ya que la tabla de
+              <em>jobs</em> es local a la instancia de la <em>shell</em> que
+              inició el proceso.
+            </li>
+          </ul>
+        </section>
+        <!-- EXPERIMENTO 3 -->
+        <section>
+          <h2>
+            Experimento 3 - Intento de interrupción mediante teclado en procesos
+            en segundo plano
+          </h2>
+          <h3>Intervención y resultado</h3>
+          <h4>
+            1. Ejecución del proceso de control <code>test.py</code> en
+            <code>pts/0</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.2/test.py &
+[1] 2034
+Ejecutándose el proceso PID: 2034
+Ejecutándose el proceso PID: 2034
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> jobs
+[1]+ Running ./linux-lab/l01.2/test.py &
+Ejecutándose el proceso PID: 2034</code></pre>
+          <h4>2. Intento de interrupción mediante teclado</h4>
+          <pre><code>Ejecutándose el proceso PID: 2034
+Ejecutándose el proceso PID: 2034
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ^C
+Ejecutándose el proceso PID: 2034</code></pre>
+          <h4>
+            3 Comprobación mediante el comando <code>ps</code> de la
+            interrupcción mediante teclado del proceso de control
+            <code>test.py</code>
+          </h4>
+          <pre><code>Ejecutándose el proceso PID: 2034
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps
+PID TTY TIME CMD
+1121 pts/0 00:00:00 bash
+2034 pts/0 00:00:00 python3
+2035 pts/0 00:00:00 ps
+Ejecutándose el proceso PID: 2034</code></pre>
+          <div class="card">
+            <strong>Observación</strong>. El proceso no ha sido interrumpido.
+          </div>
+          <h4>
+            4. Transferencia del proceso a primer plano mediante el comando
+            <code>fg</code> e interrupción mediante teclado
+          </h4>
+          <pre><code>Ejecutándose el proceso PID: 2034
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> fg %1
+./linux-lab/l01.2/test.py
+Ejecutándose el proceso PID: 2034
+Ejecutándose el proceso PID: 2034
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ^C
+Proceso interrumpido por el usuario</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            Al intentar terminar el proceso mediante un atajo de teclado
+            mientras este se encontraba en segundo plano, el proceso no
+            reaccionó. Esto ocurre porque el teclado está asociado
+            exclusivamente al grupo de procesos en primer plano
+            <em>foreground</em>, por lo que los procesos en segundo plano no
+            reciben las señales generadas desde la terminal. Ante esta
+            situación, las opciones disponibles fueron:
+          </p>
+          <ul class="custom-list">
+            <li>
+              Enviar la señal de terminación directamente al proceso utilizando
+              su PID con el comando <code>kill</code>.
+            </li>
+            <li>
+              Recuperar el control interactivo de la terminal trayendo el
+              proceso al primer plano mediante el comando <code>fg</code>,
+              momento en el cual sí responde de nuevo a las señales enviadas
+              desde el teclado.
+            </li>
+          </ul>
+        </section>
+        <!-- EXPERIMENTO 4 -->
+        <section>
+          <h2>
+            Experimento 4 - Cierre de sesión SSH en procesos en segundo plano
+          </h2>
+          <h3>Intervención y resultado</h3>
+          <h4>
+            1. Ejecución del proceso de control <code>test.py</code> en
+            <code>pts/0</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ./linux-lab/l01.2/test.py
+Ejecutándose el proceso PID: 2149</code></pre>
+          <h4>
+            2. Inspección del proceso de control <code>test.py</code> desde
+            <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> pgrep -af test.py
+2149 python3 ./linux-lab/l01.2/test.py
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -o pid,ppid,stat=status,cmd=comando -p 2149
+PID PPID status comando
+2149 1121 S+ python3 ./linux-lab/l01.2/test.py</code></pre>
+          <h4>3 Cierre de sesión en <code>pts/0</code></h4>
+          <h4>
+            4. Inspección del proceso de control <code>test.py</code> desde
+            <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> pgrep -af test.py
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -o pid,ppid,stat=status,cmd=comando -p 2149
+PID PPID status com
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span></code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            En este escenario experimental, el proceso lanzado desde la sesión
+            interactiva SSH finalizó al cerrar dicha sesión.
+          </p>
+          <p>
+            Este resultado demuestra que, por defecto, los procesos hijos
+            dependientes de una sesión de terminal se ven afectados por su
+            clausura.
+          </p>
+          <div class="card">
+            <h3>Conclusión</h3>
+            <p>
+              Se evidencia que para garantizar la persistencia de los procesos
+              de forma independiente a la terminal o al usurio conectado se
+              necesita utilizar herramientas de desvinculación como:
+            </p>
+            <ul class="custom-list">
+              <li><code>nohup</code></li>
+              <li>gestión centralizada mediante servicios</li>
+            </ul>
+          </div>
+        </section>
+        <!--EXPERIMENTO 5-->
+        <section>
+          <h2>Experimento 5 - <code>nohup</code></h2>
+          <h3>Intervención y resultado</h3>
+          <h4>
+            1. Ejecución del proceso de control <code>test.py</code> mediante el
+            comando <code>nohup</code> en
+            <code>pts/0</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> nohup ./linux-lab/l01.2/test.py
+nohup: ignoring input and appending output to 'nohup.out'</code></pre>
+          <h4>
+            2. Inspección del proceso de control <code>test.py</code> desde
+            <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> pgrep -af test.py
+3033 python3 ./linux-lab/l01.2/test.py
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -o pid,ppid,stat=status,cmd=comando -p 3033
+PID PPID status comando
+3033 3013 S+ python3 ./linux-lab/l01.2/test.py</code></pre>
+          <h4>3 Cierre de sesión en <code>pts/0</code></h4>
+          <h4>
+            4. Inspección y manipulación del proceso de control
+            <code>test.py</code> desde
+            <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -o pid,ppid,stat=status,cmd=comando -p 3033
+PID PPID status comando
+3033 1 S python3 ./linux-lab/l01.2/test.py
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> kill -2 3033
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> date ; date >> nohup.out ; cat nohup.out
+Mon Aug 17 09:18:17 AM UTC 2026
+Ejecutándose el proceso PID: 3033
+Ejecutándose el proceso PID: 3033
+Ejecutándose el proceso PID: 3033
+Proceso interrumpido por el usuario
+Mon Aug 17 09:18:17 AM UTC 2026</code></pre>
+          <h3>Interpretación</h3>
+          <ul class="custom-list">
+            <li>
+              Al utilizar el comando <code>nohup</code>, el proceso continúa
+              ejecutándose de forma persistente tras el cierre de la sesión
+              interactiva.
+            </li>
+            <li>
+              Tras la desconexión, se observa un
+              <strong
+                >cambio clave en la jerarquía: el proceso padre (PPID) deja de
+                ser la terminal original y pasa a depender de
+                <code>systemd</code></strong
+              >.
+            </li>
+            <li>
+              Asimismo, se comprueba que es posible interrumpir el proceso de
+              forma controlada enviando la señal <code>SIGINT</code>, mediante
+              el comando <code>kill -2</code>, desde una sesión SSH
+              independiente.
+            </li>
+          </ul>
+        </section>
+
+        <!--EXPERIMENTO 6-->
+        <section>
+          <h2>Experimento 6 - Servicio <code>systemd</code></h2>
+          <h3>Preparación</h3>
+          <p>
+            Se emplea el servicio <code>dtest.py</code> desde dos
+            pseudoterminales independientes en la misma máquina virtual:
+          </p>
+          <ul class="custom-list">
+            <li><code>pts/0</code>: Ejecución del proceso bajo prueba.</li>
+            <li><code>pts/1</code>: Inspección de PID.</li>
+          </ul>
+          <h4>Configuración del servicio</h4>
+          <p>
+            Configuración de la unidad de servicio
+            <code>dtest.service</code> para gestionar <code>dtest.py</code> de
+            forma centralizada en la ruta
+            <code>/etc/systemd/system/dtest.service</code>:
+          </p>
+          <pre><code>[Unit]
+Description=Demonio de prueba en Python para laboratorio M1C2
+[Service]
+Type=simple
+User=ricardo
+WorkingDirectory=/home/ricardo/linux-lab/l01.2
+ExecStart=/home/ricardo/linux-lab/l01.2/dtest.py
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target</code></pre>
+          <h3>Intervención y resultado</h3>
+          <h4>
+            1. Solicitud de inicio del servicio <code>dtest.py</code> desde
+            <code>pts/0</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl start dtest</code></pre>
+          <h4>
+            2. Inspección del servicio <code>dtest.py</code> en
+            <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl status dtest
+<span style="color: var(--brand-primary);">●</span> dtest.service - Demonio de prueba en Python para laboratorio M1C2
+ Loaded: loaded (/etc/systemd/system/dtest.service; disabled; preset: <span style="color: var(--brand-primary);">enabled</span>)
+ Active: <span style="color: var(--brand-primary);">active (running)</span> since Mon 2026-08-17 12:03:05 UTC; 5s ago
+ Main PID: 4123 (python3)
+ Tasks: 1 (limit: 4600)
+ Memory: 3.8M (peak: 3.9M)
+ CPU: 31ms
+ CGroup: /system.slice/dtest.service
+         └─<span style="color: var(--text-tertiary);">4123 python3 /home/ricardo/linux-lab/l01.2/dtest.py</span>
+
+Aug 17 12:03:05 ubuntu-lab systemd[1]: Started dtest.service - Demonio de prueba en Python para laboratorio M1C2
+</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> pgrep -af dtest.py
+4123 python3 /home/ricardo/linux-lab/l01.2/dtest.py
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -o pid,ppid,stat,tty,cmd -p 4123
+PID PPID STAT TT CMD
+4123 1 Ss ? python3 /home/ricardo/linux-lab/l01.2/dtest.p</code></pre>
+          <div class="card">
+            <strong>Observación</strong>.
+            <p>
+              Existen dos diferencias fundamentales entre
+              <code>dtest.py</code> y <code>test.py</code> ejecutado en segundo
+              plano mediante el operador <code>&</code>:
+            </p>
+            <ul class="custom-list">
+              <li>
+                <strong>Jerarquía de procesos</strong>. Desde su inicio, el
+                servicio identifica a <code>systemd</code> como su proceso padre
+                (PPID 1), a diferencia de los procesos de shell, cuyo padre
+                inicial es el intérprete de comandos.
+              </li>
+              <li>
+                <strong>Terminal de control</strong>. En la columna TTY, el
+                servicio se identifica con un signo de interrogación
+                <code>?</code>, lo que indica que el proceso no está asociado a
+                una terminal, característica propia de los demonios del sistema.
+              </li>
+            </ul>
+          </div>
+          <h4>3 Cierre de sesión en <code>pts/0</code></h4>
+          <h4>
+            4 Inspección del servicio <code>dtest.py</code> en
+            <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/l01.2$</span> sudo systemctl status dtest
+<span style="color: var(--brand-primary);">●</span> dtest.service - Demonio de prueba en Python para laboratorio M1C2
+ Loaded: loaded (/etc/systemd/system/dtest.service; disabled; preset: <span style="color: var(--brand-primary);">enabled</span>)
+ Active: <span style="color: var(--brand-primary);">active (running)</span> since Mon 2026-08-17 12:03:05 UTC; 18min ago
+ Main PID: 4123 (python3)
+ Tasks: 1 (limit: 4600)
+ Memory: 3.8M (peak: 3.9M)
+ CPU: 45ms
+ CGroup: /system.slice/dtest.service
+         └─<span style="color: var(--text-tertiary);">4123 python3 /home/ricardo/linux-lab/l01.2/dtest.py</span>
+
+Aug 17 12:03:05 ubuntu-lab systemd[1]: Started dtest.service - Demonio de prueba en Python para laboratorio M1C2
+</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/l01.2$</span> pgrep -af dtest
+4123 python3 /home/ricardo/linux-lab/l01.2/dtest.py
+</code></pre>
+          <div class="card">
+            <strong>Observación</strong>. <code>dtest.py</code> sigue
+            ejecutándose a pesar de haberse cerrado la terminal
+            <code>pts/0</code> desde la que se inició el servicio
+          </div>
+          <h4>
+            5 Detención del servicio <code>dtest.py</code> desde
+            <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl stop dtest
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl status dtest
+○ dtest.service - Demonio de prueba en Python para laboratorio M1C2
+ Loaded: loaded (/etc/systemd/system/dtest.service; disabled; preset: <span style="color: var(--brand-primary);">enabled</span>)
+ Active: inactive (dead)
+
+Aug 17 12:23:48 ubuntu-lab systemd[1]: dtest.service: Deactivated successfully.
+Aug 17 12:23:48 ubuntu-lab systemd[1]: Stopped dtest.service - Demonio de prueba en Python para laboratorio M1C2</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> pgrep -af dtest.py
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> </code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            El experimento demuestra que <code>systemd</code> permite gestionar
+            un proceso de forma independiente de la sesión interactiva desde la
+            que se solicita su ejecución.<br />
+            El proceso queda integrado en la jerarquía de <code>systemd</code>,
+            sin terminal de control <code>TTY = ?</code> y continúa ejecutándose
+            después del cierre de la terminal que inició el servicio.
+          </p>
+          <p>
+            La gestión del proceso deja de depender de la shell del usuario y
+            pasa a estar centralizada en <code>systemd</code>, que permite
+            consultar su estado, identificar su PID y detenerlo mediante
+            <code>systemctl</code>.
+          </p>
+        </section>
+        <!--EXPERIMENTO 7-->
+        <section>
+          <h2>
+            Experimento 7 - Servicio <code>systemd</code> ante la terminación
+            inesperada del proceso
+          </h2>
+          <div class="card">
+            <strong>Observación</strong>. Este experimento se realizó
+            posteriormente al anteriro. Entre ambos experimentos se modificaron
+            las rutas de los archivos <code>dtest.py</code> y
+            <code>test.py</code>.
+            <pre
+              style="margin-top: 0.75rem"
+            ><code><span class="prompt-symbol">ricardo@ubuntu-lab:/etc/systemd/system$</span> ls -l dtest.service
+lrwxrwxrwx 1 root root 47 Aug 19 07:24 <span class="prompt-symbol">dtest.service</span> -> /home/ricardo/linux-lab/m01/a2m01/dtest.service</code></pre>
+          </div>
+          <h3>Intervención y resultado</h3>
+          <h4>
+            1. Solicitud de inicio del servicio <code>dtest.py</code> e
+            identificación del proceso PID
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> systemctl start dtest</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> systemctl status dtest
+<span class="prompt-symbol">●</span> dtest.service - Demonio de prueba para laboratorio M1C2
+     Loaded: loaded (/etc/systemd/system/dtest.service; linked; preset: <span class="prompt-symbol">enabled</span>)
+     Active: <span class="prompt-symbol">active (running)</span> since Fri 2026-09-25 15:46:56 UTC; 9s ago
+   Main PID: 3228 (python3)
+      Tasks: 1 (limit: 4601)
+     Memory: 3.8M (peak: 3.9M)
+        CPU: 45ms
+     CGroup: /system.slice/dtest.service
+             └─<span style="color: var(--text-tertiary);">3228 python3 /home/ricardo/linux-lab/m01/a2m01/dtest.py</span>
+
+Sep 25 15:46:56 ubuntu-lab systemd[1]: Started dtest.service - Demonio de prueba para laboratorio M1C2</code></pre>
+          <h4>
+            2. Terminación inesperada del proceso e inspección del estado del
+            proceso
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> kill -9 3228</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> systemctl status dtest
+<span>●</span> dtest.service - Demonio de prueba para laboratorio M1C2
+     Loaded: loaded (/etc/systemd/system/dtest.service; linked; preset: <span class="prompt-symbol">enabled</span>)
+     Active: <span class="prompt-symbol">active (running)</span> since Fri 2026-09-25 16:03:04 UTC; 2s ago
+   Main PID: 3257 (python3)
+      Tasks: 1 (limit: 4601)
+     Memory: 3.8M (peak: 3.9M)
+        CPU: 36ms
+     CGroup: /system.slice/dtest.service
+             └─<span style="color: var(--text-tertiary);">3257 python3 /home/ricardo/linux-lab/m01/a2m01/dtest.py</span>
+
+Sep 25 16:03:04 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">dtest.service: Failed with result 'signal'.</span>
+Sep 25 16:03:04 ubuntu-lab systemd[1]: dtest.service: Scheduled restart job, restart counter is at 1.
+Sep 25 16:03:04 ubuntu-lab systemd[1]: Started dtest.service - Demonio de prueba para laboratorio M1C2</code></pre>
+          <div class="card">
+            <strong>Observación</strong>. El proceso original terminó al recibir
+            la señal <code>SIGKILL</code>, pero <code>systemd</code> detectó la
+            terminación inesperada y reinició automáticamente el servicio, que
+            pasó a ejecutarse con un nuevo PID <code>3257</code>
+          </div>
+          <h4>3. Terminación del proceso</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> systemctl stop dtest</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> systemctl status dtest
+○ dtest.service - Demonio de prueba para laboratorio M1C2
+     Loaded: loaded (/etc/systemd/system/dtest.service; linked; preset: <span class="prompt-symbol">enabled</span>)
+     Active: inactive (dead)
+
+Sep 25 15:46:56 ubuntu-lab systemd[1]: Started dtest.service - Demonio de prueba para laboratorio M1C2
+Sep 25 16:03:04 ubuntu-lab systemd[1]: dtest.service: Main process exited, code=killed, status=9/KILL
+Sep 25 16:03:04 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">dtest.service: Failed with result 'signal'.</span>
+Sep 25 16:03:04 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">dtest.service: Scheduled restart job, restart counter is at 1.</span>
+Sep 25 16:03:04 ubuntu-lab systemd[1]: Started dtest.service - Demonio de prueba para laboratorio M1C2
+Sep 25 16:15:44 ubuntu-lab systemd[1]: Stopping dtest.service - Demonio de prueba para laboratorio M1C2...
+Sep 25 16:15:44 ubuntu-lab systemd[1]: dtest.service: Deactivated successfully.
+Sep 25 16:15:44 ubuntu-lab systemd[1]: Stopped dtest.service - Demonio de prueba para laboratorio M1C2</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            El experimento demuestra la función de supervisión de
+            <code>systemd</code> mediante la directiva
+            <code>Restart=on-failure</code>.
+          </p>
+          <p>
+            La terminación del proceso mediante <code>SIGKILL</code> es
+            detectada como un fallo y provoca el reinicio automático del
+            servicio, que pasa a ejecutarse con un nuevo PID. En cambio, la
+            detención solicitada mediante <code>systemctl stop</code> finaliza
+            el servicio sin provocar un reinicio.
+          </p>
+        </section>
+        <!--TODO
+        PENSAR:
+        • si tiene sentido algún experimento complementario
+        • Un cuadro que establezca una comparativa entre los distintos experimentos al hilo de la comparativa de señales de M1C1
+        • Conclusiones generales del laboratorio y resumen
+        • Las mejores evidencias de terminal
+        • Reelaborar la relevancia operativa. PUEDE haber una alternativa en MW L01.1 y L01.2
+        Una vez terminado, pulir-->
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
 </html>
