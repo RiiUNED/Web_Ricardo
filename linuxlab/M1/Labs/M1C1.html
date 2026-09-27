@@ -34,7 +34,7 @@
           <p class="lead-text">
             Investigación experimental del mecanismo de señales.
           </p>
-          <!-- DISPONIBILIDAD (práctico para recruiter) -->
+          <!-- RELEVANCIA OPERATIVA (práctico para recruiter) -->
           <section>
             <div class="callout-box">
               <span class="tag">process-management</span>
@@ -52,7 +52,7 @@
                 permite al proceso gestionar una terminación ordenada, frente a
                 la terminación forzada mediante <code>SIGKILL</code>.
               </p>
-              <p>
+              <p style="margin-top: 0.75rem;">
                 También demuestra la capacidad de investigar un comportamiento
                 inesperado y relacionarlo con las restricciones impuestas por el
                 sistema operativo
@@ -567,29 +567,27 @@ Killed</code></pre>
             cuando tienen manejadores de señales y cómo algunas señales, SIGKILL
             en este laboratorio, no pueden ser capturadas ni ignoradas.
           </p>
-          <section>
-            <div class="card">
-              <h4>Resumen:</h4>
-              <ul class="custom-list">
-                <li>
-                  Las señales son el mecanismo estándar de notificación
-                  asíncrona entre el kernel y los procesos en sistemas
-                  UNIX/Linux.
-                </li>
-                <li>
-                  Un proceso puede interceptar señales estándar (como
-                  <code>SIGTERM</code>) mediante manejadores para asegurar
-                  cierres limpios o redefinir su respuesta.
-                </li>
-                <li>
-                  Las señales <code>SIGKILL</code> y <code>SIGSTOP</code> están
-                  protegidas a nivel del sistema operativo para permitir a los
-                  administradores de sistemas y al propio kernel detener
-                  procesos desbocados de forma determinista.
-                </li>
-              </ul>
-            </div>
-          </section>
+
+          <div class="card">
+            <h4>Resumen:</h4>
+            <ul class="custom-list">
+              <li>
+                Las señales son el mecanismo estándar de notificación asíncrona
+                entre el kernel y los procesos en sistemas UNIX/Linux.
+              </li>
+              <li>
+                Un proceso puede interceptar señales estándar (como
+                <code>SIGTERM</code>) mediante manejadores para asegurar cierres
+                limpios o redefinir su respuesta.
+              </li>
+              <li>
+                Las señales <code>SIGKILL</code> y <code>SIGSTOP</code> están
+                protegidas a nivel del sistema operativo para permitir a los
+                administradores de sistemas y al propio kernel detener procesos
+                desbocados de forma determinista.
+              </li>
+            </ul>
+          </div>
         </section>
 
         <!-- EVIDENCIAS DE CONSOLA -->
