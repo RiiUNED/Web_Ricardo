@@ -1,22 +1,253 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Visualización de Imagen</title>
-  <!-- Vinculación al archivo CSS externo -->
-  <link rel="stylesheet" href="../../../styles.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linux Lab | M1T1 Troubleshooting de servicio Linux</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../../../img/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../../../styles.css" />
+  </head>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="../M1 index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> M1 Procesos y Señales
+        </a>
+        <nav>
+          <a href="../../../index.html">Inicio</a>
+          <a href="../../../linuxlab/LL index.html" class="active">Linux Lab</a>
+          <a href="../../../proyectos/P index.html">Proyectos</a>
+          <a href="../../../cv/CV index.html">CV</a>
+        </nav>
+      </div>
+    </header>
 
-  <main class="container">
-    <h1>M1T1. Estamos trabajando</h1>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="container">
+        <!-- ENCABEZADO Y METADATOS DEL LABORATORIO -->
+        <header class="lab-header">
+          <h1>Laboratorio M1T1 &#45; Troubleshooting de un servicio Linux</h1>
+          <h3>
+            <code>SIGTERM</code>, <code>SIGKILL</code> y reinicios con
+            <code>systemd</code>
+          </h3>
+          <p class="lead-text">
+            Investigación de un servicio Linux que no responde correctamente a
+            una solicitud de parada y que se reinicia automáticamente después de
+            una terminación forzada.
+          </p>
+          <!-- RELEVANCIA OPERATIVA (práctico para recruiter) -->
+          <section>
+            <div class="callout-box">
+              <span class="tag">service-troubleshooting</span>
+              <span class="tag">systemd</span>
+              <span class="tag">journalctl</span>
+              <span class="tag">linux-signals</span>
+              <span class="tag">service-lifecycle</span>
 
-    <!-- Contenedor para centrar la imagen -->
-    <div class="img-container">
-      <img src="../../../img/obras.webp" alt="Imagen provisional">
-    </div>
-  </main>
+              <h3>&gt;_ Relevancia Operativa</h3>
 
-</body>
+              <p>
+                Este laboratorio demuestra la capacidad práctica para investigar
+                incidencias en servicios Linux mediante el análisis de su
+                comportamiento, los registros de <code>systemd</code> y las
+                señales utilizadas durante su ciclo de vida.
+              </p>
+
+              <p style="margin-top: 0.75rem">
+                También demuestra la capacidad para identificar la causa de una
+                terminación incorrecta, relacionar el comportamiento de un
+                proceso con la configuración del servicio y verificar la
+                corrección aplicada mediante herramientas como
+                <code>systemctl</code>, <code>journalctl</code> y
+                <code>pgrep</code>, incluyendo el análisis de políticas de
+                reinicio como <code>Restart=on-failure</code>.
+              </p>
+            </div>
+          </section>
+        </header>
+
+        <!-- INCIDENCIAS OBSERVADAS -->
+        <section>
+          <h2>Contexto del incidente</h2>
+          <div class="card">
+            <ul class="custom-list">
+              <li>
+                <strong>Sistema:</strong> <code>Ubuntu Server 24.04 LTS</code>
+              </li>
+              <li><strong>Servicio:</strong> <code>t1m01.service</code></li>
+              <li>
+                <strong>Aplicación:</strong> proceso
+                <code>Python</code> ejecutado como servicio mediante
+                <code>systemd</code>
+              </li>
+            </ul>
+          </div>
+          <p>Durante las pruebas se observan dos comportamientos anómalos:</p>
+          <ul class="custom-list">
+            <li>
+              <code>systemctl stop</code> no consigue detener el servicio dentro
+              del tiempo esperado.
+            </li>
+            <li>
+              La terminación forzada del proceso mediante
+              <code>kill -9</code> provoca que <code>systemd</code> inicie
+              automáticamente una nueva instancia con un <code>PID</code>
+              diferente.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Incidencias observadas</h2>
+          <h3>Parada mediante <code>systemctl stop</code></h3>
+          <h4>
+            1. Parada del servicio <code>t1m01</code> desde <code>pts/0</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> sudo systemctl stop t1m01</code></pre>
+          <h4>
+            2. Inspección de <code>journalctl</code> desde <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> sudo journalctl -u t1m01.service -f</code></pre>
+          <pre><code>Sep 28 14:07:56 ubuntu-lab python3[1597]: [14:07:56] Worker procesando tareas en background...
+Sep 28 14:08:09 ubuntu-lab systemd[1]: Stopping t1m01.service - Demonio de prueba para laboratorio t1m01...
+Sep 28 14:08:09 ubuntu-lab python3[1597]: [14:08:09] [PID:1597] SEÑAL RECIBIDA (15). Ignorando petición de parada...
+Sep 28 14:08:11 ubuntu-lab python3[1597]: [14:08:11] Worker procesando tareas en background...
+Sep 28 14:08:27 ubuntu-lab python3[1597]: [14:08:27] Worker procesando tareas en background...
+Sep 28 14:08:29 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">t1m01.service: State 'stop-sigterm' timed out. Killing.</span>
+Sep 28 14:08:29 ubuntu-lab systemd[1]: <span class="prompt-symbol">t1m01.service: Killing process 1597 (python3) with signal SIGKILL.</span>
+Sep 28 14:08:29 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">t1m01.service: Main process exited, code=killed, status=9/KILL</span>
+Sep 28 14:08:29 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">t1m01.service: Failed with result 'timeout'.</span>
+Sep 28 14:08:29 ubuntu-lab systemd[1]: Stopped t1m01.service - Demonio de prueba para laboratorio t1m01.</code></pre>
+          <h3>
+            Teminación mediante <code>SIGKILL</code> y reinicio automático
+          </h3>
+          <h4>
+            1. Terminación directa del proceso desde <code>pts/0</code> y
+            aparición de nueva instancia de <code>app.py</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> pgrep -af app
+1702 /usr/bin/python3 -u /home/ricardo/linux-lab/m01/t1m01/5app.py</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> kill -9 1702</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> pgrep -af app
+1707 /usr/bin/python3 -u /home/ricardo/linux-lab/m01/t1m01/5app.py</code></pre>
+          <h4>
+            2. Inspección de <code>journalctl</code> desde <code>pts/1</code>
+          </h4>
+          <pre><code>Sep 28 14:42:59 ubuntu-lab systemd[1]: Started t1m01.service - Demonio de prueba para laboratorio t1m01.
+Sep 28 14:42:59 ubuntu-lab python3[1702]: [14:42:59] Servicio Worker iniciado con PID: 1702
+Sep 28 14:42:59 ubuntu-lab python3[1702]: [14:42:59] Worker procesando tareas en background...
+Sep 28 14:43:14 ubuntu-lab python3[1702]: [14:43:14] Worker procesando tareas en background...
+Sep 28 14:43:29 ubuntu-lab systemd[1]: <span class="prompt-symbol">t1m01.service: Main process exited, code=killed, status=9/KILL</span>
+Sep 28 14:43:29 ubuntu-lab systemd[1]: <span class="prompt-symbol">t1m01.service: Failed with result 'signal'.</span>
+Sep 28 14:43:31 ubuntu-lab systemd[1]: t1m01.service: Scheduled restart job, restart counter is at 1.
+Sep 28 14:43:31 ubuntu-lab systemd[1]: Started t1m01.service - Demonio de prueba para laboratorio t1m01.
+Sep 28 14:43:31 ubuntu-lab python3[1707]: [14:43:31] Servicio Worker iniciado con PID: 1707
+Sep 28 14:43:31 ubuntu-lab python3[1707]: [14:43:31] Worker procesando tareas en background...</code></pre>
+        </section>
+
+        <section>
+          <h2>Investigación y causa raíz</h2>
+        </section>
+
+        <!--A PARTIR DE AQUÍ ES OTRO LABORATORIO-->
+        <!-- INVESTIGACIÓN -->
+        <section>
+          <h2>Investigación</h2>
+          <h3>
+            Modificación del comportamiento de procesos al recibir señales
+          </h3>
+
+          <h3>
+            Modificación del comportamiento de un proceso ante cualquier señal
+          </h3>
+        </section>
+
+        <!-- HIPÓTESIS -->
+        <section>
+          <h2>Hipótesis</h2>
+        </section>
+
+        <!-- PROCESOS UTILIZADOS -->
+        <section>
+          <h2>Procesos utilizados</h2>
+
+          <h3>Proceso sin manejador de señales <code>testNoH.py</code></h3>
+
+          <h3>Proceso con manejador de señales <code>testH.py</code></h3>
+        </section>
+
+        <!-- EXPERIMENTO 3 -->
+        <section>
+          <h2>
+            Experimento 3 - Envío de SIGKILL a un proceso con handler SIGTERM
+          </h2>
+
+          <h3>Intervención y resultado</h3>
+
+          <h4>1. Ejecución en <code>pts/1</code>:</h4>
+
+          <h4>
+            2. Envío de la señal <code>SIGKILL</code> desde <code>pts/0</code>:
+          </h4>
+
+          <h4>3. Comprobación del estado del proceso en <code>pts/1</code>:</h4>
+        </section>
+
+        <!-- TABLA COMPARATIVA -->
+        <section>
+          <h2>Comparativa de señales</h2>
+        </section>
+
+        <!-- CONCLUSIONES -->
+        <section>
+          <h2>Conclusiones generales</h2>
+        </section>
+
+        <!-- EVIDENCIAS DE CONSOLA -->
+        <section>
+          <h2>Evidencias de terminal</h2>
+
+          <h3>Identificación de jerarquía de procesos</h3>
+
+          <h3>Ejecución de Handler con SIGTERM</h3>
+
+          <h3>Rechazo del registro de SIGKILL</h3>
+        </section>
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
 </html>
