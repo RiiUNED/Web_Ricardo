@@ -348,7 +348,7 @@ header.site-header nav a.active {
 .callout-box .tag {
   display: inline-block;
   margin-bottom: 1.25rem; /* Crea la separación directa con el <h3> */
-  margin-right: 0.5rem;   /* Separa las etiquetas entre sí */
+  margin-right: 0.5rem; /* Separa las etiquetas entre sí */
 }
 
 /* SECCIONES OSCURAS (#0F172A) */
@@ -530,4 +530,10 @@ footer.site-footer .copyright {
   .portfolio-action-desc {
     margin-left: 0;
   }
+}
+.command-column {
+  white-space: nowrap;
+  width: 1%;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }

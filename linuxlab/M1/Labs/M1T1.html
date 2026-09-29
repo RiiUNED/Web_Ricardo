@@ -71,7 +71,7 @@
           </section>
         </header>
 
-        <!-- INCIDENCIAS OBSERVADAS -->
+        <!-- CONTEXTO DEL INCIDENTE -->
         <section>
           <h2>Contexto del incidente</h2>
           <div class="card">
@@ -102,6 +102,7 @@
           </ul>
         </section>
 
+        <!--INCIDENCIAS OBSERVADAS-->
         <section>
           <h2>Incidencias observadas</h2>
           <h3>Parada mediante <code>systemctl stop</code></h3>
@@ -124,17 +125,17 @@ Sep 28 14:08:29 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">
 Sep 28 14:08:29 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">t1m01.service: Failed with result 'timeout'.</span>
 Sep 28 14:08:29 ubuntu-lab systemd[1]: Stopped t1m01.service - Demonio de prueba para laboratorio t1m01.</code></pre>
           <h3>
-            Teminación mediante <code>SIGKILL</code> y reinicio automático
+            Terminación mediante <code>SIGKILL</code> y reinicio automático
           </h3>
           <h4>
             1. Terminación directa del proceso desde <code>pts/0</code> y
             aparición de nueva instancia de <code>app.py</code>
           </h4>
-          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> pgrep -af app
-1702 /usr/bin/python3 -u /home/ricardo/linux-lab/m01/t1m01/5app.py</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> pgrep -af app.py
+1702 /usr/bin/python3 -u /home/ricardo/linux-lab/m01/t1m01/app.py</code></pre>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> kill -9 1702</code></pre>
-          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> pgrep -af app
-1707 /usr/bin/python3 -u /home/ricardo/linux-lab/m01/t1m01/5app.py</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> pgrep -af app.py
+1707 /usr/bin/python3 -u /home/ricardo/linux-lab/m01/t1m01/app.py</code></pre>
           <h4>
             2. Inspección de <code>journalctl</code> desde <code>pts/1</code>
           </h4>
@@ -150,73 +151,346 @@ Sep 28 14:43:31 ubuntu-lab python3[1707]: [14:43:31] Servicio Worker iniciado co
 Sep 28 14:43:31 ubuntu-lab python3[1707]: [14:43:31] Worker procesando tareas en background...</code></pre>
         </section>
 
+        <!--INVESTIGACIÓN Y CAUSA RAÍZ-->
         <section>
           <h2>Investigación y causa raíz</h2>
-        </section>
-
-        <!--A PARTIR DE AQUÍ ES OTRO LABORATORIO-->
-        <!-- INVESTIGACIÓN -->
-        <section>
-          <h2>Investigación</h2>
-          <h3>
-            Modificación del comportamiento de procesos al recibir señales
-          </h3>
-
-          <h3>
-            Modificación del comportamiento de un proceso ante cualquier señal
-          </h3>
-        </section>
-
-        <!-- HIPÓTESIS -->
-        <section>
-          <h2>Hipótesis</h2>
-        </section>
-
-        <!-- PROCESOS UTILIZADOS -->
-        <section>
-          <h2>Procesos utilizados</h2>
-
-          <h3>Proceso sin manejador de señales <code>testNoH.py</code></h3>
-
-          <h3>Proceso con manejador de señales <code>testH.py</code></h3>
-        </section>
-
-        <!-- EXPERIMENTO 3 -->
-        <section>
-          <h2>
-            Experimento 3 - Envío de SIGKILL a un proceso con handler SIGTERM
-          </h2>
-
-          <h3>Intervención y resultado</h3>
-
-          <h4>1. Ejecución en <code>pts/1</code>:</h4>
-
+          <h3><code>SIGTERM</code> no provoca la terminación del proceso</h3>
+          <h4>1. Ejecución en <code>pts/0</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> sudo systemctl stop t1m01</code></pre>
           <h4>
-            2. Envío de la señal <code>SIGKILL</code> desde <code>pts/0</code>:
+            2. Inspección de <code>journalctl</code> en <code>pts/1</code>
           </h4>
+          <pre><code>Sep 28 14:08:09 ubuntu-lab systemd[1]: Stopping t1m01.service - Demonio de prueba para laboratorio t1m01...
+Sep 28 14:08:09 ubuntu-lab python3[1597]: [14:08:09] [PID:1597] SEÑAL RECIBIDA (15). Ignorando petición de parada...
+Sep 28 14:08:29 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">t1m01.service: State 'stop-sigterm' timed out. Killing.</span>
+Sep 28 14:08:29 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">t1m01.service: Main process exited, code=killed, status=9/KILL</span></code></pre>
+          <h4>3. Evidencias recabadas</h4>
+          <ol class="custom-list">
+            <li><code>systemd</code> inició la parada del servicio.</li>
+            <li>
+              El proceso recibió la señal 15 <code>SIGTERM</code> y ejecutó
+              código de la aplicación en respuesta a ella.
+            </li>
+            <li>
+              El proceso continuó ejecutándose después de recibir la señal.
+            </li>
+            <li>
+              Transcurridos 20 segundos, <code>systemd</code> agotó el tiempo de
+              espera de parada.
+            </li>
+            <li>
+              <code>systemd</code> terminó entonces el proceso mediante
+              <code>SIGKILL</code>.
+            </li>
+          </ol>
+          <h4>4. Inspección del código de <code>app.py</code></h4>
+          <p>
+            El programa tenía registrado un manejador para <code>SIGTERM</code>.
+          </p>
+          <pre><code># Capturar SIGTERM (15)
+signal.signal(signal.SIGTERM, ignore_termination)</code></pre>
+          <p>
+            El manejador de la señal <code>SIGTERM</code> no termina el proceso.
+          </p>
+          <pre><code>def ignore_termination(signum, frame):
+ print(f"[{time.strftime('%H:%M:%S')}] [PID:{os.getpid()}] SEÑAL RECIBIDA ({signum}). 
+ Ignorando petición de parada...")</code></pre>
+          <div class="card">
+            <strong>Causa raíz</strong>. El manejador personalizado de
+            <code>SIGTERM</code> procesaba la señal pero no iniciaba la
+            terminación del proceso.
+          </div>
+          <h3>
+            <code>SIGKILL</code> provoca el reinicio automático del servicio
+          </h3>
+          <h4>
+            1. Terminación directa del proceso y aparición de nueva instancia
+            del proceso en <code>pts/0</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> kill -9 1702</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t1m01$</span> pgrep -af app.py
+1707 /usr/bin/python3 -u /home/ricardo/linux-lab/m01/t1m01/app.py</code></pre>
+          <h4>
+            2. Inspección de <code>journalctl</code> desde <code>pts/1</code>
+          </h4>
+          <pre><code>Sep 28 14:43:29 ubuntu-lab systemd[1]: <span class="prompt-symbol">t1m01.service: Main process exited, code=killed, status=9/KILL</span>
+Sep 28 14:43:31 ubuntu-lab systemd[1]: t1m01.service: Scheduled restart job, restart counter is at 1.
+Sep 28 14:43:31 ubuntu-lab systemd[1]: Started t1m01.service - Demonio de prueba para laboratorio t1m01.</code></pre>
+          <h4>3. Evidencias recabadas</h4>
+          <ol class="custom-list">
+            <li>
+              El proceso fue terminado mediante <code>SIGKILL</code> (<code
+                >kill -9</code
+              >).
+            </li>
+            <li>
+              <code>systemd</code> registró la terminación como
+              <code>status=9/KILL</code>.
+            </li>
+            <li>
+              Dos segundos después, <code>systemd</code> programó un reinicio.
+            </li>
+            <li>
+              Se inició una nueva instancia del servicio con un PID diferente.
+            </li>
+          </ol>
+          <h4>4. Inspección de la configuración de la unidad</h4>
 
-          <h4>3. Comprobación del estado del proceso en <code>pts/1</code>:</h4>
+          <p>
+            Durante la inspección se encuentra <code>Restart=on-failure</code>.
+            Esta directiva establece que el servicio debe reiniciarse cuando el
+            proceso termina en una condición considerada fallida.
+          </p>
+          <p>
+            Además, <code>SIGKILL</code> no puede ser capturada, bloqueada ni
+            ignorada por el proceso. Por tanto, la aplicación no puede
+            interceptar esta señal para ejecutar su propia lógica de cierre.
+          </p>
+          <div class="card">
+            <strong>Causa raíz</strong>. La terminación del proceso mediante
+            <code>SIGKILL</code> hizo que <code>systemd</code> registrara el servicio con
+            resultado <code>signal</code>, y la directiva
+            <code>Restart=on-failure</code> provocó automáticamente el arranque
+            de una nueva instancia.
+          </div>
         </section>
 
-        <!-- TABLA COMPARATIVA -->
+        <!--CORRECCIONES APLICADAS-->
         <section>
-          <h2>Comparativa de señales</h2>
+          <h2>Correcciones aplicadas</h2>
+          <h3>
+            Corrección incidencia: Parada mediante <code>systemctl stop</code>
+          </h3>
+          <p>
+            Se modificó el manejador de señales de <code>app.py</code> para que
+            <code>SIGTERM</code>
+            provocara explícitamente la terminación del proceso:
+          </p>
+          <pre><code>import signal
+import sys
+
+def graceful_shutdown(signum, frame):
+ print(f"[{time.strftime('%H:%M:%S')}] [PID:{os.getpid()}] SEÑAL RECIBIDA ({signum}). 
+ \nCierre ordenado.\nLiberando recursos...")
+ sys.exit(0) #Salida limpia con código 0
+
+# Capturar SIGTERM (15) y SIGINT (2)
+signal.signal(signal.SIGTERM, graceful_shutdown)
+signal.signal(signal.SIGINT, graceful_shutdown)</code></pre>
+          <p>
+            La llamada a <code>sys.exit(0)</code> termina el proceso Python con
+            un estado de salida <code>0</code>.
+          </p>
+          <p>
+            De esta forma, una solicitud normal de parada mediante
+            <code>systemctl stop</code> deja de quedar bloqueada por un proceso
+            que continúa ejecutándose después de recibir <code>SIGTERM</code>.
+          </p>
+          <h3>
+            Corrección incidencia: Terminación mediante <code>SIGKILL</code> y
+            reinicio automático
+          </h3>
+          <p>
+            La causa del reinicio automático se encontraba en la política de
+            reinicio configurada en la unidad:<br /><code
+              >Restart=on-failure</code
+            >
+          </p>
+          <p>
+            Para evitar que una terminación del proceso mediante
+            <code>SIGKILL</code> provocara el arranque automático de una nueva
+            instancia, se modificó la configuración del servicio para eliminar
+            la política de reinicio automático:<br />
+            <code>[Service]<br />Restart=no</code>
+          </p>
         </section>
 
-        <!-- CONCLUSIONES -->
+        <!--VERIFICACIONES POSTERIORES-->
         <section>
-          <h2>Conclusiones generales</h2>
-        </section>
+          <h2>Verificaciones posteriores</h2>
+          <h3>
+            Verificaciones posteriores: Parada mediante
+            <code>systemctl stop</code>
+          </h3>
+          <h4>Matriz de verificación</h4>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Prueba</th>
+                  <th class="command-column">Comando</th>
+                  <th>Resultado esperado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Detención limpia</strong></td>
+                  <td class="command-column">
+                    <code>sudo systemctl stop t1m01.service</code>
+                  </td>
+                  <td>
+                    El servicio se detiene sin agotar el tiempo de espera y
+                    queda en
+                    <code>inactive (dead)</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Procesos residuales</strong></td>
+                  <td class="command-column">
+                    <code>pgrep -af app.py</code>
+                  </td>
+                  <td>
+                    No quedan procesos de <code>app.py</code> en ejecución.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Inspección del proceso</strong></td>
+                  <td class="command-column">
+                    <code>pstree -p -N user</code>
+                  </td>
+                  <td>
+                    No queda el proceso del servicio en el árbol de procesos.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h4>Verificación de detención limpia</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl stop t1m01</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl status t1m01
+○ t1m01.service - Demonio de prueba para laboratorio t1m01
+     Loaded: loaded (/etc/systemd/system/t1m01.service; linked; preset: <span class="prompt-symbol">enabled</span>)
+     Active: inactive (dead)
 
-        <!-- EVIDENCIAS DE CONSOLA -->
-        <section>
-          <h2>Evidencias de terminal</h2>
+Sep 29 11:37:34 ubuntu-lab systemd[1]: Stopping t1m01.service - Demonio de prueba para laboratorio t1m01...
+Sep 29 11:37:34 ubuntu-lab python3[2055]: [11:37:34] [PID:2055] SEÑAL RECIBIDA (15).
+Sep 29 11:37:34 ubuntu-lab python3[2055]: Cierre ordenado.
+Sep 29 11:37:34 ubuntu-lab python3[2055]: Liberando recursos...
+Sep 29 11:37:34 ubuntu-lab systemd[1]: t1m01.service: Deactivated successfully.
+Sep 29 11:37:34 ubuntu-lab systemd[1]: Stopped t1m01.service - Demonio de prueba para laboratorio t1m01.</code></pre>
+          <div class="card">
+            <strong>Se cumple el resultado esperado</strong>. El servicio se
+            detiene sin agotar el tiempo de espera y queda en
+            <code>inactive (dead)</code>.
+          </div>
+          <h4>Verificación de procesos residuales</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> pgrep -af app.py
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span></code></pre>
+          <div class="card">
+            <strong>Se cumple el resultado esperado</strong>. No quedan procesos
+            de <code>app.py</code> en ejecución.
+          </div>
+          <h4>Inspección del proceso</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> pstree -p -N user
+[4026531837]
+bash(1052)
+bash(1115)───pstree(2126)
+bash(1975)</code></pre>
+          <div class="card">
+            <strong>Se cumple el resultado esperado</strong>. No queda el
+            proceso del servicio en el árbol de procesos.
+          </div>
+          <h3>
+            Verificaciones posteriores: Terminación mediante
+            <code>SIGKILL</code> y reinicio automático
+          </h3>
+          <h4>Matriz de verificación</h4>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Prueba</th>
+                  <th class="command-column">Comando</th>
+                  <th>Resultado esperado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Ausencia de reinicio</strong></td>
+                  <td class="command-column">
+                    <code>pgrep -af app.py</code>
+                  </td>
+                  <td>
+                    No se crea una nueva instancia de <code>app.py</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Estado del servicio</strong></td>
+                  <td class="command-column">
+                    <code>systemctl status t1m01</code>
+                  </td>
+                  <td>
+                    El servicio queda en <code>failed (Result: signal)</code> y
+                    no se reinicia.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <strong>Observación</strong>. <code>SIGKILL</code> no permite una
+            parada limpia ni una terminación ordenada del proceso, ya que no
+            puede ser capturada ni gestionada por el proceso receptor. Por
+            tanto, la corrección aplicada actúa sobre <code>systemd</code>,
+            evitando que la terminación forzada provoque el reinicio automático
+            del servicio.
+          </div>
+          <h4>
+            1. Inicio del servicio y terminación mediante <code>SIGKILL</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl start t1m01</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl status t1m01
+<span class="prompt-symbol">●</span> t1m01.service - Demonio de prueba para laboratorio t1m01
+     Loaded: loaded (/etc/systemd/system/t1m01.service; linked; preset: <span class="prompt-symbol">enabled</span>)
+     Active: <span class="prompt-symbol">active (running)</span> since Tue 2026-09-29 12:21:04 UTC; 5s ago
+   Main PID: 2264 (python3)
+      Tasks: 1 (limit: 4601)
+     Memory: 4.0M (peak: 4.2M)
+        CPU: 24ms
+     CGroup: /system.slice/t1m01.service
+             └─<span style="color: var(--text-tertiary);">2264 /usr/bin/python3 -u /home/ricardo/linux-lab/m01/t1m01/app.py</span>
 
-          <h3>Identificación de jerarquía de procesos</h3>
+Sep 29 12:21:04 ubuntu-lab systemd[1]: Started t1m01.service - Demonio de prueba para laboratorio t1m01.
+Sep 29 12:21:04 ubuntu-lab python3[2264]: [12:21:04] Servicio Worker iniciado con PID: 2264
+Sep 29 12:21:04 ubuntu-lab python3[2264]: [12:21:04] Worker procesando tareas en background...</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> kill -9 2264</code></pre>
+          <h4>2. Verificación de ausencia de reinicio</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> pgrep -af app.py
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span></code></pre>
+          <div class="card">
+            <strong>Se cumple el resultado esperado</strong>. Tras la
+            terminación mediante <code>SIGKILL</code>, no se crea una nueva
+            instancia de <code>app.py</code>.
+          </div>
+          <h4>3. Verificación del estado del servicio</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl status t1m01
+<span class="prompt-symbol">×</span> t1m01.service - Demonio de prueba para laboratorio t1m01
+     Loaded: loaded (/etc/systemd/system/t1m01.service; linked; preset: <span class="prompt-symbol">enabled</span>)
+     Active: <span class="prompt-symbol">failed</span> (Result: signal) since Tue 2026-09-29 12:26:48 UTC; 5min ago
+   Duration: 5min 43.702s
+    Process: 2264 ExecStart=/usr/bin/python3 -u /home/ricardo/linux-lab/m01/t1m01/app.py <span class="prompt-symbol">(code=killed, signal=KILL)</span>
+   Main PID: 2264 (code=killed, signal=KILL)
+        CPU: 34ms
 
-          <h3>Ejecución de Handler con SIGTERM</h3>
-
-          <h3>Rechazo del registro de SIGKILL</h3>
+Sep 29 12:26:36 ubuntu-lab python3[2264]: [12:26:36] Worker procesando tareas en background...
+Sep 29 12:26:48 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">t1m01.service: Main process exited, code=killed, status=9/KILL</span>
+Sep 29 12:26:48 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">t1m01.service: Failed with result 'signal'.</span></code></pre>
+          <div class="card">
+            <p>
+              <strong>Se cumple el resultado esperado</strong>. Tras la
+              terminación mediante <code>SIGKILL</code>, no se crea una nueva
+              instancia de <code>app.py</code>.
+            </p>
+            <p>
+              <strong
+                >Se confirma que <code>systemd</code> no reinicia
+                automáticamente el servicio tras la terminación mediante
+                <code>SIGKILL</code></strong
+              >. El estado <code>failed (Result: signal)</code> refleja la
+              terminación del proceso mediante una señal y no implica un
+              reinicio del servicio.
+            </p>
+          </div>
         </section>
       </div>
     </main>
