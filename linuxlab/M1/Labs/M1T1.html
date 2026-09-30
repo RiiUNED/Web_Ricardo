@@ -248,8 +248,8 @@ Sep 28 14:43:31 ubuntu-lab systemd[1]: Started t1m01.service - Demonio de prueba
           </p>
           <div class="card">
             <strong>Causa raíz</strong>. La terminación del proceso mediante
-            <code>SIGKILL</code> hizo que <code>systemd</code> registrara el servicio con
-            resultado <code>signal</code>, y la directiva
+            <code>SIGKILL</code> hizo que <code>systemd</code> registrara el
+            servicio con resultado <code>signal</code>, y la directiva
             <code>Restart=on-failure</code> provocó automáticamente el arranque
             de una nueva instancia.
           </div>
@@ -491,6 +491,37 @@ Sep 29 12:26:48 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">
               reinicio del servicio.
             </p>
           </div>
+        </section>
+        <!-- EVIDENCIAS DE TERMINAL-->
+        <section>
+          <h2>Evidencias de terminal</h2>
+          <h3>Parada limpia mediante <code>systemctl</code></h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl stop t1m01</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl status t1m01
+○ t1m01.service - Demonio de prueba para laboratorio t1m01
+     Loaded: loaded (/etc/systemd/system/t1m01.service; linked; preset: <span class="prompt-symbol">enabled</span>)
+     Active: inactive (dead)
+
+Sep 29 11:37:34 ubuntu-lab systemd[1]: Stopping t1m01.service - Demonio de prueba para laboratorio t1m01...
+Sep 29 11:37:34 ubuntu-lab python3[2055]: [11:37:34] [PID:2055] SEÑAL RECIBIDA (15).
+Sep 29 11:37:34 ubuntu-lab python3[2055]: Cierre ordenado.
+Sep 29 11:37:34 ubuntu-lab python3[2055]: Liberando recursos...
+Sep 29 11:37:34 ubuntu-lab systemd[1]: t1m01.service: Deactivated successfully.
+Sep 29 11:37:34 ubuntu-lab systemd[1]: Stopped t1m01.service - Demonio de prueba para laboratorio t1m01.</code></pre>
+          <h3><code>SIGKILL</code> sin reinicio automático</h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> kill -9 2264</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl status t1m01
+<span class="prompt-symbol">×</span> t1m01.service - Demonio de prueba para laboratorio t1m01
+     Loaded: loaded (/etc/systemd/system/t1m01.service; linked; preset: <span class="prompt-symbol">enabled</span>)
+     Active: <span class="prompt-symbol">failed</span> (Result: signal) since Tue 2026-09-29 12:26:48 UTC; 5min ago
+   Duration: 5min 43.702s
+    Process: 2264 ExecStart=/usr/bin/python3 -u /home/ricardo/linux-lab/m01/t1m01/app.py <span class="prompt-symbol">(code=killed, signal=KILL)</span>
+   Main PID: 2264 (code=killed, signal=KILL)
+        CPU: 34ms
+
+Sep 29 12:26:36 ubuntu-lab python3[2264]: [12:26:36] Worker procesando tareas en background...
+Sep 29 12:26:48 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">t1m01.service: Main process exited, code=killed, status=9/KILL</span>
+Sep 29 12:26:48 ubuntu-lab systemd[1]: <span style="color: var(--brand-hover);">t1m01.service: Failed with result 'signal'.</span></code></pre>
         </section>
       </div>
     </main>

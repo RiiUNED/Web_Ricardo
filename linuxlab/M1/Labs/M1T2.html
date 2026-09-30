@@ -1,22 +1,387 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Visualización de Imagen</title>
-  <!-- Vinculación al archivo CSS externo -->
-  <link rel="stylesheet" href="../../../styles.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linux Lab | M1T2 Diagnóstico de procesos Linux</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../../../img/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../../../styles.css" />
+  </head>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="../M1 index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> M1 Procesos y Señales
+        </a>
+        <nav>
+          <a href="../../../index.html">Inicio</a>
+          <a href="../../../linuxlab/LL index.html" class="active">Linux Lab</a>
+          <a href="../../../proyectos/P index.html">Proyectos</a>
+          <a href="../../../cv/CV index.html">CV</a>
+        </nav>
+      </div>
+    </header>
 
-  <main class="container">
-    <h1>M1T2. Estamos trabajando</h1>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="container">
+        <!-- ENCABEZADO Y METADATOS DEL LABORATORIO -->
+        <header class="lab-header">
+          <h1>Laboratorio M1T2 &#45; Diagnóstico de procesos Linux</h1>
+          <p class="lead-text">
+            Investigación de procesos Linux que permanecen en estado Zombie y
+            fugas de descriptores de archivo mediante herramientas de
+            diagnóstico del sistema.
+          </p>
+          <!-- RELEVANCIA OPERATIVA (práctico para recruiter) -->
 
-    <!-- Contenedor para centrar la imagen -->
-    <div class="img-container">
-      <img src="../../../img/obras.webp" alt="Imagen provisional">
-    </div>
-  </main>
+          <section>
+            <div class="callout-box">
+              <span class="tag">process-diagnostics</span>
+              <span class="tag">zombie-processes</span>
+              <span class="tag">file-descriptors</span>
+              <span class="tag">proc-filesystem</span>
+              <span class="tag">strace</span>
 
-</body>
+              <h3>&gt;_ Relevancia Operativa</h3>
+
+              <p>
+                Este laboratorio demuestra la capacidad práctica para investigar
+                incidencias relacionadas con procesos Linux y consumo de
+                recursos, partiendo del comportamiento observado y utilizando
+                evidencias del sistema para determinar su causa.
+              </p>
+
+              <p style="margin-top: 0.75rem">
+                Se aplican herramientas como <code>ps</code>,
+                <code>pstree</code>, <code>/proc</code>, <code>lsof</code> y
+                <code>strace</code> para identificar procesos
+                <code>Zombie</code>, analizar relaciones padre-hijo y detectar
+                acumulación de descriptores de archivo. El diagnóstico se
+                completa relacionando las evidencias obtenidas con el
+                comportamiento del código y verificando posteriormente las
+                correcciones aplicadas.
+              </p>
+            </div>
+          </section>
+        </header>
+
+        <!-- CONTEXTO DEL INCIDENTE -->
+
+        <section>
+          <h2>Contexto del incidente</h2>
+
+          <div class="card">
+            <ul class="custom-list">
+              <li>
+                <strong>Sistema:</strong> <code>Ubuntu Server 24.04 LTS</code>
+              </li>
+
+              <li>
+                <strong>Aplicaciones:</strong>
+                scripts <code>Atest.py</code> y <code>Btest.py</code>
+              </li>
+
+              <li>
+                <strong>Área:</strong> procesos Linux y gestión de recursos
+              </li>
+            </ul>
+          </div>
+
+          <p>Durante las pruebas se observan dos comportamientos anómalos:</p>
+
+          <ul class="custom-list">
+            <li>
+              La ejecución de <code>Atest.py</code> genera procesos
+              <code>&lt;defunct&gt;</code> que permanecen en la tabla de
+              procesos.
+            </li>
+
+            <li>
+              La ejecución de <code>Btest.py</code> provoca una acumulación
+              progresiva de descriptores de archivo abiertos.
+            </li>
+          </ul>
+        </section>
+
+        <!--INCIDENCIAS OBSERVADAS-->
+        <section>
+          <h2>Incidencias observadas</h2>
+          <h3>Acumulación de procesos <code>&lt;defunct&gt;</code></h3>
+
+          <h4>1. Ejecución de <code>Atest.py</code> en <code>pts/0</code></h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t2m01$</span> ./Atest.py
+[11:46:01] Proceso padre iniciado con PID: 1214</code></pre>
+
+          <h4>2. Inspección de procesos desde <code>pts/1</code></h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -u
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+ricardo     1040  0.0  0.1   8788  5668 tty1     S+   11:44   0:00 -bash
+ricardo     1134  0.0  0.1   8916  5768 pts/0    Ss   11:44   0:00 -bash
+ricardo     1205  0.0  0.1   8784  5672 pts/1    Ss   11:45   0:00 -bash
+ricardo     1214  0.0  0.2  17984 10528 pts/0    S+   11:46   0:00 python3 ./Atest.py
+ricardo     1215  0.0  0.0      0     0 pts/0    Z+   11:46   0:00 [python3] &lt;defunct&gt;</code></pre>
+
+          <div class="card">
+            <strong>Observación</strong>. El proceso PID 1215, hijo del proceso
+            <code>Atest.py</code>, aparece con estado <code>Z+</code> y marcado
+            como <code>&lt;defunct&gt;</code>, indicando que el proceso ya ha
+            finalizado su ejecución, pero su entrada permanece en la tabla de
+            procesos.
+          </div>
+
+          <h4>3. Intento de terminación del proceso</h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> kill -9 1215</code></pre>
+
+          <h4>4. Nueva inspección de procesos desde <code>pts/1</code></h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -u
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+ricardo     1040  0.0  0.1   8788  5668 tty1     S+   11:44   0:00 -bash
+ricardo     1134  0.0  0.1   8916  5768 pts/0    Ss   11:44   0:00 -bash
+ricardo     1205  0.0  0.1   8784  5672 pts/1    Ss   11:45   0:00 -bash
+ricardo     1214  0.0  0.2  17984 10528 pts/0    S+   11:46   0:00 python3 ./Atest.py
+ricardo     1215  0.0  0.0      0     0 pts/0    Z+   11:46   0:00 [python3] &lt;defunct&gt;</code></pre>
+          <div class="card">
+            <strong>Observación</strong>. El proceso
+            <code>&lt;defunct&gt;</code> continúa apareciendo después de enviar
+            <code>SIGKILL</code>. La señal no elimina la entrada del proceso
+            porque este ya ha finalizado su ejecución.
+          </div>
+          <h3>Acumulación de descriptores de archivo abiertos</h3>
+
+          <h4>1. Ejecución de <code>Btest.py</code> en <code>pts/0</code></h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t2m01$</span> ./Btest.py
+[14:01:49] Servicio FD-Leak iniciado con PID: 1711</code></pre>
+          <h4>
+            2. Trazado de llamadas al sistema mediante <code>strace</code>
+          </h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo strace -p 1711 -e trace=openat,write,close
+strace: Process 1711 attached
+openat(AT_FDCWD, "/home/ricardo/linux-lab/m01/t2m01/dataB/test.txt", O_WRONLY|O_CREAT|O_APPEND|O_CLOEXEC, 0666) = 16
+openat(AT_FDCWD, "/home/ricardo/linux-lab/m01/t2m01/dataB/test.txt", O_WRONLY|O_CREAT|O_APPEND|O_CLOEXEC, 0666) = 17
+write(1, "[14:03:05] Descriptores retenido"..., 71) = 71</code></pre>
+
+          <div class="card">
+            <strong>Observación</strong>. En la traza mostrada se observan
+            varias llamadas <code>openat()</code> sobre <code>test.txt</code>,
+            sin aparecer llamadas <code>close()</code> que liberen esos
+            descriptores.
+          </div>
+          <h4>3. Inspección de descriptores desde <code>pts/1</code></h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ls -l /proc/1711/fd
+total 0
+lrwx------ 1 ricardo ricardo 64 Sep 30 14:07 0 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+lrwx------ 1 ricardo ricardo 64 Sep 30 14:07 1 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 10 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 11 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 12 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 13 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 14 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 15 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 16 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 17 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+lrwx------ 1 ricardo ricardo 64 Sep 30 14:07 2 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 3 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 4 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt</code></pre>
+
+          <div class="card">
+            <strong>Observación</strong>. El proceso mantiene abiertos numerosos
+            descriptores asociados al mismo archivo <code>test.txt</code>,
+            además de los tres descriptores estándar. La presencia simultánea de
+            múltiples descriptores sobre el mismo archivo evidencia la
+            acumulación de recursos abiertos.
+          </div>
+
+          <h4>
+            4. Comprobación del límite de archivos abiertos en
+            <code>pts/0</code>
+          </h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> cat /proc/1711/limits | grep "Max open files"
+Limit                     Soft Limit           Hard Limit           Units
+Max open files            1024                 1048576              files</code></pre>
+
+          <div class="card">
+            <strong>Observación</strong>. El proceso tiene establecido un límite
+            blando de <code>1024</code> archivos abiertos y un límite duro de
+            <code>1048576</code>. La acumulación observada puede hacer que el
+            proceso alcance el límite disponible si continúa abriendo archivos
+            sin liberarlos.
+          </div>
+
+          <h4>
+            5. Inspección mediante <code>lsof</code> desde <code>pts/1</code>
+          </h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lsof -p 1711
+COMMAND  PID    USER   FD   TYPE DEVICE SIZE/OFF   NODE NAME
+python3 1711 ricardo    0u   CHR  136,0      0t0      3 /dev/pts/0
+python3 1711 ricardo    1u   CHR  136,0      0t0      3 /dev/pts/0
+python3 1711 ricardo    2u   CHR  136,0      0t0      3 /dev/pts/0
+python3 1711 ricardo    3w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo    4w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo    5w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo    6w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo    7w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo    8w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo    9w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   10w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   11w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   12w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   13w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   14w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   15w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   16w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   17w   REG  252,0     1315 524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt</code></pre>
+
+          <div class="card">
+            <strong>Observación</strong>. <code>lsof</code> permite identificar
+            los recursos de archivo asociados al proceso y confirmar la
+            presencia de múltiples descriptores abiertos sobre
+            <code>test.txt</code>.
+          </div>
+        </section>
+
+        <!-- INVESTIGACIÓN Y CAUSA RAÍZ -->
+
+        <section>
+          <h2>Investigación y causa raíz</h2>
+
+          <h3>Acumulación de procesos <code>&lt;defunct&gt;</code></h3>
+          <h4>1. Ejecución de <code>Atest.py</code> en <code>pts/0</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t2m01$</span> ./Atest.py
+[15:19:08] Proceso padre iniciado con PID: 1840</code></pre>
+          <h4>2. Inspección de la relación padre-hijo en <code>pts/1</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> pstree -p -N user
+[4026531837]
+bash(1040)
+bash(1134)───python3(1840)───python3(1841)</code></pre>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -o pid,ppid,stat,cmd -p 1840,1841
+    PID    PPID STAT CMD
+   1840    1134 S+   python3 ./Atest.py
+   1841    1840 Z+   [python3] &lt;defunct&gt;</code></pre>
+
+          <div class="card">
+            <strong>Observación</strong>. El proceso <code>1841</code> aparece
+            en estado <code>Z+</code> y tiene como proceso padre al proceso
+            <code>1840</code>, correspondiente a <code>Atest.py</code>. Esto
+            confirma que el proceso <code>&lt;defunct&gt;</code> es un hijo del
+            proceso principal.
+          </div>
+          <h4>3. Envío de <code>SIGKILL</code> desde <code>pts/1</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> kill -9 1841
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -o pid,ppid,stat,cmd -p 1840,1841
+    PID    PPID STAT CMD
+   1840    1134 S+   python3 ./Atest.py
+   1841    1840 Z+   [python3] &lt;defunct&gt;</code></pre>
+          <h4>4. Evidencias recabadas</h4>
+
+          <ol class="custom-list">
+            <li>
+              El proceso <code>1840</code> crea un proceso hijo con PID
+              <code>1841</code>, como muestra la relación jerárquica obtenida
+              mediante <code>pstree</code>.
+            </li>
+
+            <li>
+              El proceso <code>1841</code> aparece con estado <code>Z+</code> y
+              marcado como <code>&lt;defunct&gt;</code>, indicando que ha
+              finalizado su ejecución pero su entrada permanece registrada.
+            </li>
+
+            <li>
+              El proceso <code>1841</code> tiene como <code>PPID</code> el PID
+              <code>1840</code>, confirmando que <code>Atest.py</code> es su
+              proceso padre.
+            </li>
+
+            <li>
+              El envío de <code>SIGKILL</code> mediante <code>kill -9</code> al
+              proceso <code>1841</code> no elimina su entrada: continúa
+              apareciendo con estado <code>Z+</code>.
+            </li>
+
+            <li>
+              El proceso padre <code>1840</code> permanece en estado
+              <code>S+</code> mientras su hijo <code>1841</code> permanece en
+              estado <code>&lt;defunct&gt;</code>.
+            </li>
+          </ol>
+
+          <h4>5. Inspección del código de <code>Atest.py</code></h4>
+
+          <pre><code># Proceso Hijo
+print(f"[{time.strftime('%H:%M:%S')}] Proceso Hijo (PID:{os.getpid()}) ejecutando tarea rápida y finalizando...")
+sys.exit(0)</code></pre>
+          <pre><code># Proceso Padre
+while True:
+    time.sleep(5)</code></pre>
+
+          <div class="card">
+            <strong>Causa raíz</strong>. <code>Atest.py</code> crea un proceso
+            hijo que finaliza su ejecución, pero el proceso padre no recoge su
+            estado de terminación mediante <code>wait()</code> o
+            <code>waitpid()</code>. Como consecuencia, el hijo permanece como
+            proceso <code>Zombie</code> y, si el comportamiento se repite,
+            pueden acumularse entradas <code>&lt;defunct&gt;</code> en la tabla
+            de procesos.
+          </div>
+        </section>
+
+        <!--CORRECCIONES APLICADAS-->
+        <section>
+          <h2>Correcciones aplicadas</h2>
+        </section>
+
+        <!--VERIFICACIONES POSTERIORES-->
+        <section>
+          <h2>Verificaciones posteriores</h2>
+        </section>
+        <!-- EVIDENCIAS DE TERMINAL-->
+        <section>
+          <h2>Evidencias de terminal</h2>
+        </section>
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
 </html>
