@@ -32,7 +32,7 @@
         <header class="lab-header">
           <h1>Laboratorio M1T2 &#45; Diagnóstico de procesos Linux</h1>
           <p class="lead-text">
-            Investigación de procesos Linux que permanecen en estado Zombie y
+            Investigación de procesos Linux que permanecen en estado zombie y
             fugas de descriptores de archivo mediante herramientas de
             diagnóstico del sistema.
           </p>
@@ -59,7 +59,7 @@
                 Se aplican herramientas como <code>ps</code>,
                 <code>pstree</code>, <code>/proc</code>, <code>lsof</code> y
                 <code>strace</code> para identificar procesos
-                <code>Zombie</code>, analizar relaciones padre-hijo y detectar
+                <code>zombie</code>, analizar relaciones padre-hijo y detectar
                 acumulación de descriptores de archivo. El diagnóstico se
                 completa relacionando las evidencias obtenidas con el
                 comportamiento del código y verificando posteriormente las
@@ -167,8 +167,7 @@ ricardo     1215  0.0  0.0      0     0 pts/0    Z+   11:46   0:00 [python3] &lt
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo strace -p 1711 -e trace=openat,write,close
 strace: Process 1711 attached
 openat(AT_FDCWD, "/home/ricardo/linux-lab/m01/t2m01/dataB/test.txt", O_WRONLY|O_CREAT|O_APPEND|O_CLOEXEC, 0666) = 16
-openat(AT_FDCWD, "/home/ricardo/linux-lab/m01/t2m01/dataB/test.txt", O_WRONLY|O_CREAT|O_APPEND|O_CLOEXEC, 0666) = 17
-write(1, "[14:03:05] Descriptores retenido"..., 71) = 71</code></pre>
+openat(AT_FDCWD, "/home/ricardo/linux-lab/m01/t2m01/dataB/test.txt", O_WRONLY|O_CREAT|O_APPEND|O_CLOEXEC, 0666) = 17</code></pre>
 
           <div class="card">
             <strong>Observación</strong>. En la traza mostrada se observan
@@ -333,24 +332,344 @@ while True:
             hijo que finaliza su ejecución, pero el proceso padre no recoge su
             estado de terminación mediante <code>wait()</code> o
             <code>waitpid()</code>. Como consecuencia, el hijo permanece como
-            proceso <code>Zombie</code> y, si el comportamiento se repite,
+            proceso <code>zombie</code> y, si el comportamiento se repite,
             pueden acumularse entradas <code>&lt;defunct&gt;</code> en la tabla
             de procesos.
+          </div>
+          <h3>Acumulación de descriptores de archivo abiertos</h3>
+
+          <h4>1. Ejecución de <code>Btest.py</code> en <code>pts/0</code></h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t2m01$</span> ./Btest.py
+[14:01:49] Servicio FD-Leak iniciado con PID: 1711</code></pre>
+
+          <h4>
+            2. Trazado de llamadas al sistema mediante <code>strace</code>
+          </h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo strace -p 1711 -e trace=openat,write,close
+strace: Process 1711 attached
+openat(AT_FDCWD, "/home/ricardo/linux-lab/m01/t2m01/dataB/test.txt", O_WRONLY|O_CREAT|O_APPEND|O_CLOEXEC, 0666) = 16
+openat(AT_FDCWD, "/home/ricardo/linux-lab/m01/t2m01/dataB/test.txt", O_WRONLY|O_CREAT|O_APPEND|O_CLOEXEC, 0666) = 17</code></pre>
+
+          <h4>3. Inspección de descriptores desde <code>pts/1</code></h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ls -l /proc/1711/fd
+total 0
+lrwx------ 1 ricardo ricardo 64 Sep 30 14:07 0 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+lrwx------ 1 ricardo ricardo 64 Sep 30 14:07 1 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 10 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 11 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 12 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 13 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 14 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 15 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 16 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 17 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+lrwx------ 1 ricardo ricardo 64 Sep 30 14:07 2 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 3 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 4 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt</code></pre>
+
+          <h4>
+            4. Comprobación del límite de archivos abiertos en
+            <code>pts/0</code>
+          </h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> cat /proc/1711/limits | grep "Max open files"
+Limit                     Soft Limit           Hard Limit           Units
+Max open files             1024                 1048576             files</code></pre>
+
+          <h4>
+            5. Inspección mediante <code>lsof</code> desde <code>pts/1</code>
+          </h4>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lsof -p 1711
+COMMAND  PID   USER   FD  TYPE DEVICE SIZE/OFF   NODE NAME
+python3 1711 ricardo   0u  CHR  136,0      0t0      3 /dev/pts/0
+python3 1711 ricardo   1u  CHR  136,0      0t0      3 /dev/pts/0
+python3 1711 ricardo   2u  CHR  136,0      0t0      3 /dev/pts/0
+python3 1711 ricardo   3w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   4w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   5w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   6w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   7w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   8w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo   9w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo  10w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo  11w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo  12w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo  13w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo  14w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo  15w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo  16w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+python3 1711 ricardo  17w  REG  252,0     1315  524656 /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt</code></pre>
+          <h4>6. Evidencias recabadas</h4>
+
+          <ol class="custom-list">
+            <li>
+              La traza de <code>strace</code> muestra sucesivas llamadas
+              <code>openat()</code> sobre el mismo archivo
+              <code>test.txt</code>, sin observarse llamadas
+              <code>close()</code> que liberen los descriptores.
+            </li>
+
+            <li>
+              La inspección de <code>/proc/1711/fd</code> muestra múltiples
+              descriptores abiertos que apuntan simultáneamente a
+              <code>test.txt</code>.
+            </li>
+
+            <li>
+              La salida de <code>lsof</code> confirma que el proceso mantiene
+              abiertos los descriptores <code>3</code> a <code>17</code> sobre
+              <code>test.txt</code>.
+            </li>
+
+            <li>
+              El proceso tiene establecido un límite blando de
+              <code>1024</code> archivos abiertos, por lo que la retención
+              continuada de descriptores puede provocar que el proceso alcance
+              dicho límite.
+            </li>
+
+            <li>
+              Las evidencias obtenidas confirman que los descriptores permanecen
+              abiertos durante la ejecución del proceso, por lo que es necesario
+              revisar el código de <code>Btest.py</code> para determinar qué
+              operación provoca su apertura y por qué no son liberados.
+            </li>
+          </ol>
+          <h4>7. Inspección del código de <code>Btest.py</code></h4>
+
+          <pre><code># Apertura de archivos
+for i in range(15):
+    f = open(open_file, "a")
+    f.write(f"Registro de prueba {i}\n")
+    open_files.append(f)
+    time.sleep(5)</code></pre>
+
+          <div class="card">
+            <strong>Causa raíz</strong>. <code>Btest.py</code> abre un nuevo
+            descriptor de archivo en cada iteración y conserva el objeto de
+            archivo en la lista <code>open_files</code>, pero no ejecuta
+            <code>close()</code> sobre los archivos abiertos. Como consecuencia,
+            los descriptores permanecen asociados al proceso y se acumulan
+            mientras continúa la ejecución, pudiendo alcanzar el límite de
+            archivos abiertos del proceso.
           </div>
         </section>
 
         <!--CORRECCIONES APLICADAS-->
         <section>
           <h2>Correcciones aplicadas</h2>
+          <h3>
+            Corrección incidencia: Acumulación de procesos
+            <code>&lt;defunct&gt;</code>
+          </h3>
+
+          <p>
+            Se modificó <code>Atest.py</code> para que el proceso padre recoja
+            explícitamente el estado de terminación del proceso hijo mediante
+            <code>wait()</code>:
+          </p>
+
+          <pre><code># Proceso Padre
+pid, status = os.wait()
+
+print(
+    f"[{time.strftime('%H:%M:%S')}] "
+    f"Proceso hijo {pid} finalizado con estado {status}"
+)
+
+while True:
+    time.sleep(5)</code></pre>
+
+          <p>
+            La llamada a <code>os.wait()</code> bloquea al proceso padre hasta
+            que uno de sus procesos hijos termina y, posteriormente, recoge su
+            estado de terminación.
+          </p>
+
+          <p>
+            De esta forma, el proceso hijo no permanece como
+            <code>&lt;defunct&gt;</code> y su entrada puede ser eliminada de la
+            tabla de procesos.
+          </p>
+          <h3>
+            Corrección incidencia: Acumulación de descriptores de archivo
+            abiertos
+          </h3>
+
+          <p>
+            Se modificó <code>Btest.py</code> para cerrar automáticamente el
+            objeto archivo al finalizar cada operación de escritura mediante el
+            gestor de contexto <code>with</code>:
+          </p>
+
+          <pre><code># Abrir el archivo y cerrar automáticamente el objeto archivo
+try:
+    for i in range(15):
+        # Corrección en código Python
+        with open(open_file, "a") as f:
+            f.write("Registro con cierre automático de Descriptor\n")
+        # El descriptor de archivo se cierra automáticamente al salir del bloque
+        time.sleep(5)
+except Exception as e:
+    print(f"Error:{e}")</code></pre>
+
+          <p>
+            Al salir del bloque <code>with</code>, el objeto archivo se cierra
+            automáticamente y el descriptor asociado se libera.
+          </p>
+
+          <p>
+            De esta forma, los descriptores utilizados en cada iteración no
+            permanecen abiertos durante la ejecución del proceso y se evita su
+            acumulación progresiva.
+          </p>
         </section>
 
         <!--VERIFICACIONES POSTERIORES-->
         <section>
           <h2>Verificaciones posteriores</h2>
+          <h3>
+            Verificaciones posteriores: Acumulación de procesos
+            <code>&lt;defunct&gt;</code>
+          </h3>
+          <h4>Matriz de verificación</h4>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Prueba</th>
+                  <th class="command-column">Comando</th>
+                  <th>Resultado esperado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Ausencia de proceso zombie</strong></td>
+                  <td class="command-column">
+                    <code
+                      >ps -o pid,ppid,stat,cmd -p
+                      &lt;PID_PADRE&gt;,&lt;PID_HIJO&gt;</code
+                    >
+                  </td>
+                  <td>
+                    El proceso hijo no permanece en estado <code>Z</code> ni
+                    aparece como <code>&lt;defunct&gt;</code> después de su
+                    finalización.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>Ejecución <code>Atest.py</code> en <code>pts/0</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t2m01$</span> ./Atest.py
+[12:28:03] Proceso padre iniciado con PID: 1839
+[12:28:03] Proceso Hijo (PID:1840) ejecutando tarea rápida y finalizando...
+[12:28:03] Proceso hijo 1840 finalizado con estado 0</code></pre>
+          <h4>
+            Verificación de ausencia de procesos zombie desde <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t2m01$</span> ps -o pid,ppid,stat,cmd -p 1839,1840
+    PID    PPID STAT CMD
+   1839    1062 S+   python3 ./Atest.py</code></pre>
+          <div class="card">
+            <strong>Se cumple el resultado esperado</strong>. El proceso hijo no
+            permanece en estado <code>Z</code> ni aparece como
+            <code>&lt;defunct&gt;</code> después de su finalización.
+          </div>
+          <h3>
+            Verificaciones posteriores: Acumulación de descriptores de archivo
+            abiertos
+          </h3>
+
+          <h4>Matriz de verificación</h4>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Prueba</th>
+                  <th class="command-column">Comando</th>
+                  <th>Resultado esperado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Ausencia de descriptores retenidos</strong></td>
+                  <td class="command-column">
+                    <code>ls -l /proc/&lt;PID&gt;/fd</code>
+                  </td>
+                  <td>
+                    No se acumulan descriptores adicionales asociados a
+                    <code>test.txt</code>; tras cada iteración, el descriptor
+                    utilizado para la escritura es liberado.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h4>Ejecución de <code>Btest.py</code> en <code>pts/0</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t2m01$</span> ./Btest.py
+[13:10:57] Servicio FD-Leak iniciado con PID: 2067</code></pre>
+          <h4>
+            Verificación de la ausencia de descriptores retenidos desde
+            <code>pts/1</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t2m01$</span> ls -l /proc/2067/fd
+total 0
+lrwx------ 1 ricardo ricardo 64 Oct  1 13:11 0 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+lrwx------ 1 ricardo ricardo 64 Oct  1 13:11 1 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+lrwx------ 1 ricardo ricardo 64 Oct  1 13:11 2 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+<span class="prompt-symbol">ricardo@ubuntu-lab:~/linux-lab/m01/t2m01$</span></code></pre>
+          <div class="card">
+            <strong>Se cumple el resultado esperado</strong>. No se acumulan
+            descriptores adicionales asociados a <code>test.txt</code>.
+          </div>
         </section>
-        <!-- EVIDENCIAS DE TERMINAL-->
+        <!-- EVIDENCIAS DE TERMINAL -->
         <section>
           <h2>Evidencias de terminal</h2>
+          <h3>Inspección de la relación padre-hijo en <code>pts/1</code></h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> pstree -p -N user
+[4026531837]
+bash(1040)
+bash(1134)───python3(1840)───python3(1841)</code></pre>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ps -o pid,ppid,stat,cmd -p 1840,1841
+    PID    PPID STAT CMD
+   1840    1134 S+   python3 ./Atest.py
+   1841    1840 Z+   [python3] &lt;defunct&gt;</code></pre>
+          <h3>Muestra de la acumulación de descriptores</h3>
+
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> ls -l /proc/1711/fd
+total 0
+lrwx------ 1 ricardo ricardo 64 Sep 30 14:07 0 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+lrwx------ 1 ricardo ricardo 64 Sep 30 14:07 1 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 10 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 11 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 12 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 13 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 14 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 15 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 16 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 17 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+lrwx------ 1 ricardo ricardo 64 Sep 30 14:07 2 -> <span style="color: var(--brand-hover);">/dev/pts/0</span>
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 3 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt
+l-wx------ 1 ricardo ricardo 64 Sep 30 14:07 4 -> /home/ricardo/linux-lab/m01/t2m01/dataB/test.txt</code></pre>
+          <h3>
+            <code>strace</code> mostrando <code>openat()</code> repetidos sin
+            <code>close()</code>
+          </h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo strace -p 1711 -e trace=openat,write,close
+strace: Process 1711 attached
+openat(AT_FDCWD, "/home/ricardo/linux-lab/m01/t2m01/dataB/test.txt", O_WRONLY|O_CREAT|O_APPEND|O_CLOEXEC, 0666) = 16
+openat(AT_FDCWD, "/home/ricardo/linux-lab/m01/t2m01/dataB/test.txt", O_WRONLY|O_CREAT|O_APPEND|O_CLOEXEC, 0666) = 17</code></pre>
+   
         </section>
       </div>
     </main>
