@@ -1,22 +1,135 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Visualización de Imagen</title>
-  <!-- Vinculación al archivo CSS externo -->
-  <link rel="stylesheet" href="../styles.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ricardo Sánchez | CV</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../img/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="../index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> Ricardo Sánchez
+        </a>
+        <nav>
+          <a href="../index.html">Inicio</a>
+          <a href="../linuxlab/LL index.html">Linux Lab</a>
+          <a href="../proyectos/P index.html">Proyectos</a>
+          <a href="./CV index.html" class="active">CV</a>
+        </nav>
+      </div>
+    </header>
 
-  <main class="container">
-    <h1>CV. Estamos trabajando</h1>
+    <!-- CONTENIDO PRINCIPAL -->
 
-    <!-- Contenedor para centrar la imagen -->
-    <div class="img-container">
-      <img src="../img/obras.webp" alt="Imagen provisional">
-    </div>
-  </main>
+    <main class="main-content">
+      <div class="container">
+        <h1>Ricardo Sánchez</h1>
 
-</body>
+        <h3>Graduado en Ingeniería Informática</h3>
+
+        <p class="cv-profile">
+          Administración de Sistemas Linux | Resolución de Incidencias | Soporte
+          Técnico | NOC / SOC Nivel 1
+        </p>
+
+        <!-- EXPERIENCIA LABORAL-->
+        <div class="cv-section">
+          <h2>Experiencia Laboral</h2>
+          <h3>ENAIRE</h3>
+
+          <p>
+            <a
+              href="https://empleo.enaire.es/empleo/OcupSrv?accion=detalle&codOcupacion=44607"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Técnico de Mantenimiento de Sistemas de Navegación Aérea
+              (Especializado)
+            </a>
+            <br />
+            Torrejón de Ardoz, Madrid
+          </p>
+
+          <p class="subtext-tertiary">2022</p>
+        </div>
+        <!-- FORMACIÓN ACADÉMICA -->
+
+        <section class="cv-section">
+          <h2>Formación académica</h2>
+
+          <div class="cv-item">
+            <h3>Universidad Nacional de Educación a Distancia (UNED)</h3>
+
+            <p>Grado en Ingeniería Informática.</p>
+
+            <p class="subtext-tertiary">2020 - 2025</p>
+          </div>
+        </section>
+
+        <!-- CURSOS -->
+
+        <div class="cv-section">
+          <h2>Cursos</h2>
+          <h3>
+            <a
+              href="https://aws.amazon.com/es/training/learn-about/cloud-practitioner/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              AWS Cloud Practitioner Essentials
+            </a>
+          </h3>
+
+          <p class="subtext-tertiary">2026</p>
+        </div>
+
+        <!-- IDIOMAS -->
+
+        <section class="cv-section">
+          <h2>Idiomas</h2>
+
+          <div class="cv-item">
+            <h3>Inglés</h3>
+
+            <p>Intermedio</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
 </html>
