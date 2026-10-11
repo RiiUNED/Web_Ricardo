@@ -296,6 +296,36 @@ header.site-header nav a.active {
   line-height: 1.5;
   margin-bottom: 0;
 }
+/* Estado para tarjetas / módulos deshabilitados o en desarrollo */
+.card.card-disabled {
+  background-color: var(--bg-main); /* Fondo más tenue o plano */
+  border-color: var(--border-subtle);
+  opacity: 0.65; /* Atenúa la tarjeta sin perder legibilidad */
+  cursor: not-allowed;
+  position: relative;
+}
+
+/* Título e indicación visual para tarjetas inactivas */
+.card.card-disabled h3 {
+  color: var(--text-muted);
+}
+
+.card.card-disabled p {
+  color: var(--text-muted);
+}
+
+/* Badge / Etiqueta de "En desarrollo" o "Próximamente" */
+.card-status-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--border-subtle);
+  color: var(--brand-active);
+  margin-top: 0.75rem;
+  font-weight: 500;
+}
 
 /* SECCIÓN PORTFOLIO / PRUEBAS */
 .portfolio-actions {
