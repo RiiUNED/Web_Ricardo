@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linux Lab | M2C1 Usuarios y grupos POSIX</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../../../img/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../../../styles.css" />
+  </head>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="../M2 index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> M2 Usuarios y Permisos
+        </a>
+        <nav>
+          <a href="../../../index.html">Inicio</a>
+          <a href="../../../linuxlab/LL index.html" class="active">Linux Lab</a>
+          <a href="../../../proyectos/P index.html">Proyectos</a>
+          <a href="../../../cv/CV index.html">CV</a>
+        </nav>
+      </div>
+    </header>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="container">
+        <!-- ENCABEZADO Y METADATOS DEL LABORATORIO -->
+        <header class="lab-header">
+          <h1>Laboratorio M2C1 &#45; Usuarios y grupos POSIX</h1>
+          <p class="lead-text">
+            Investigación experimental de la identidad de las cuentas Linux y de
+            las credenciales de grupo asociadas a los procesos.
+          </p>
+          <!-- RELEVANCIA OPERATIVA (práctico para recruiter) -->
+
+          <!-- RELEVANCIA OPERATIVA -->
+          <section>
+            <div class="callout-box">
+              <span class="tag">user-management</span>
+              <span class="tag">uid-gid</span>
+              <span class="tag">supplementary-groups</span>
+              <span class="tag">process-credentials</span>
+              <span class="tag">access-troubleshooting</span>
+
+              <h3>&gt;_ Relevancia Operativa</h3>
+
+              <p>
+                Este laboratorio demuestra la capacidad práctica para consultar
+                e interpretar la identidad de usuarios y grupos en Linux
+                mediante herramientas como <code>id</code> y
+                <code>getent</code>, e inspeccionar las credenciales asociadas a
+                procesos en ejecución mediante
+                <code>/proc/&lt;PID&gt;/status</code>.
+              </p>
+
+              <p style="margin-top: 0.75rem">
+                También demuestra la capacidad de investigar incidencias de
+                acceso relacionadas con cambios en la pertenencia a grupos,
+                distinguiendo entre la información actual de una cuenta y las
+                credenciales que conserva un proceso en ejecución.
+              </p>
+            </div>
+          </section>
+        </header>
+        <!-- OBJETIVOS -->
+
+        <section>
+          <h2>Objetivos</h2>
+          <ul class="custom-list">
+            <li>
+              <strong
+                >Analizar cómo representa Linux la identidad de usuarios y
+                grupos</strong
+              >, relacionando los nombres de las cuentas con sus UID y GID, y
+              localizando la información correspondiente mediante archivos como
+              <code>/etc/passwd</code> y <code>/etc/group</code> y herramientas
+              como <code>id</code> y <code>getent</code>.
+            </li>
+            <li>
+              <strong
+                >Diferenciar la identidad de una cuenta de las credenciales de
+                un proceso en ejecución</strong
+              >, identificando los UID y GID reales y efectivos, así como los
+              grupos suplementarios, mediante la inspección de
+              <code>/proc/&lt;PID&gt;/status</code>.
+            </li>
+            <li>
+              <strong
+                >Investigar el efecto de los cambios en la pertenencia a grupos
+                sobre los procesos existentes</strong
+              >, contrastando la información de la cuenta antes y después del
+              cambio con las credenciales de procesos ya iniciados y de nuevas
+              sesiones.
+            </li>
+          </ul>
+        </section>
+        <!-- PROCESO UTILIZADO -->
+        <section>
+          <h2>Proceso utilizado</h2>
+
+          <h3>Proceso de control <code>identity.py</code></h3>
+          <pre><code>#!/usr/bin/env python3
+import os
+import pwd
+import grp
+import time
+
+def get_group_names(gids):
+    """Traduce una lista de GIDs a sus nombres correspondientes."""
+    names = []
+    for g in gids:
+        try:
+            names.append(f"{g} ({grp.getgrgid(g).gr_name})")
+        except KeyError:
+            names.append(str(g))
+    return names
+
+def main():
+    # Obtención de credenciales a nivel de proceso
+    pid = os.getpid()
+    uid = os.getuid()
+    gid = os.getgid()
+    euid = os.geteuid()
+    egid = os.getegid()
+    supplementary_gids = os.getgroups()
+
+    # Traducción de UID y GID primario a nombres
+    try:
+        user_name = pwd.getpwuid(uid).pw_name
+    except KeyError:
+        user_name = "Desconocido"
+
+    try:
+        group_name = grp.getgrgid(gid).gr_name
+    except KeyError:
+        group_name = "Desconocido"
+
+    print(f"=== INFORMACIÓN DE CREDENCIALES DEL PROCESO ===")
+    print(f" PID (Process ID)       : {pid}")
+    print(f" UID (Real / Efectivo)  : {uid} ({user_name}) / [Efectivo: {euid}]")
+    print(f" GID (Primario / Efect.) : {gid} ({group_name}) / [Efectivo: {egid}]")
+    print(f" Grupos Suplementarios  : {', '.join(get_group_names(supplementary_gids))}")
+    print("=" * 48)
+    print("El proceso se mantendrá en ejecución para inspección...")
+    print("Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.")
+
+    # Bucle infinito controlado para mantener el proceso vivo
+    try:
+        while True:
+            time.sleep(10)
+    except KeyboardInterrupt:
+        print("\n[!] Proceso finalizado por el usuario.")
+
+if __name__ == "__main__":
+    main()</code></pre>
+          <p>
+            El script consulta las credenciales de identidad del proceso en
+            ejecución, muestra los UID y GID reales y efectivos, traduce los
+            identificadores a nombres de usuario y grupo cuando es posible, y
+            permanece activo para permitir su inspección desde otra terminal.
+          </p>
+
+          <h4>1. Importación de módulos</h4>
+          <p>
+            El script utiliza módulos de Python para consultar las credenciales
+            del proceso, traducir identificadores numéricos a nombres y mantener
+            el proceso activo durante la inspección.
+          </p>
+          <ul class="custom-list">
+            <li>
+              <code>os</code>: proporciona funciones para consultar el PID y las
+              credenciales del proceso.
+            </li>
+            <li>
+              <code>pwd</code>: permite consultar la base de cuentas de usuario.
+            </li>
+            <li><code>grp</code>: permite consultar la base de grupos.</li>
+            <li>
+              <code>time</code>: proporciona la función
+              <code>sleep()</code> para mantener el proceso activo sin consumir
+              CPU innecesariamente.
+            </li>
+          </ul>
+
+          <h4>2. Traducción de GID a nombres de grupo</h4>
+          <p>
+            La función <code>get_group_names(gids)</code> recibe una lista de
+            identificadores de grupo (GID) e intenta obtener el nombre asociado
+            a cada uno. Si no encuentra una correspondencia, captura la
+            excepción <code>KeyError</code> y conserva el identificador
+            numérico.
+          </p>
+          <ul class="custom-list">
+            <li>
+              <code>grp.getgrgid(g).gr_name</code>: obtiene el nombre asociado
+              al GID.
+            </li>
+            <li>
+              <code>names.append(f"{g} ({grp.getgrgid(g).gr_name})")</code>:
+              almacena el identificador junto con el nombre del grupo.
+            </li>
+            <li>
+              <code>names.append(str(g))</code>: conserva el GID como texto
+              cuando no se encuentra el grupo.
+            </li>
+          </ul>
+
+          <h4>3. Obtención de las credenciales del proceso</h4>
+          <p>
+            Dentro de <code>main()</code>, el script consulta los
+            identificadores del proceso actual. Estos valores permiten
+            distinguir entre las credenciales reales y efectivas, así como
+            conocer los grupos suplementarios asociados al proceso.
+          </p>
+          <ul class="custom-list">
+            <li>
+              <code>os.getpid()</code>: obtiene el identificador del proceso
+              (PID).
+            </li>
+            <li>
+              <code>os.getuid()</code> y <code>os.getgid()</code>: obtienen el
+              UID y el GID reales.
+            </li>
+            <li>
+              <code>os.geteuid()</code> y <code>os.getegid()</code>: obtienen el
+              UID y el GID efectivos.
+            </li>
+            <li>
+              <code>os.getgroups()</code>: obtiene la lista de grupos
+              suplementarios del proceso.
+            </li>
+          </ul>
+
+          <h4>4. Traducción de UID y GID a nombres</h4>
+          <p>
+            El script consulta las bases de usuarios y grupos para obtener los
+            nombres asociados a los identificadores numéricos. Si no encuentra
+            una correspondencia, captura la excepción <code>KeyError</code> y
+            utiliza el texto <code>Desconocido</code>.
+          </p>
+          <ul class="custom-list">
+            <li>
+              <code>pwd.getpwuid(uid).pw_name</code>: obtiene el nombre de
+              usuario asociado al UID real.
+            </li>
+            <li>
+              <code>grp.getgrgid(gid).gr_name</code>: obtiene el nombre del
+              grupo asociado al GID real.
+            </li>
+          </ul>
+
+          <h4>5. Presentación de resultados</h4>
+          <p>
+            Las instrucciones <code>print()</code> muestran los datos
+            recopilados, facilitando la interpretación de las credenciales y su
+            posterior comparación con la información disponible en
+            <code>/proc/&lt;PID&gt;/status</code>.
+          </p>
+          <ul class="custom-list">
+            <li><code>PID</code>: identifica el proceso en ejecución.</li>
+            <li>
+              <code>UID (Real / Efectivo)</code>: muestra el UID real y el
+              efectivo.
+            </li>
+            <li>
+              <code>GID (Primario / Efect.)</code>: muestra el GID real y el
+              efectivo.
+            </li>
+            <li>
+              <code>Grupos Suplementarios</code>: muestra los GID suplementarios
+              junto con sus nombres cuando están disponibles.
+            </li>
+          </ul>
+
+          <h4>6. Bucle de ejecución continua</h4>
+          <p>
+            El bucle infinito mantiene el proceso activo mediante llamadas a
+            <code>time.sleep(10)</code>. Esto permite inspeccionarlo desde otra
+            terminal mientras permanece en ejecución, sin generar mensajes
+            periódicos ni escribir en un archivo de registro.
+          </p>
+          <ul class="custom-list">
+            <li>
+              <code>while True</code>: repite la ejecución indefinidamente.
+            </li>
+            <li>
+              <code>time.sleep(10)</code>: suspende la ejecución durante diez
+              segundos en cada iteración.
+            </li>
+          </ul>
+
+          <h4>7. Finalización mediante <code>Ctrl+C</code></h4>
+          <p>
+            El bloque <code>except KeyboardInterrupt</code> captura la excepción
+            generada normalmente cuando Python recibe <code>SIGINT</code> al
+            pulsar <code>Ctrl+C</code> desde la terminal interactiva. El script
+            muestra un mensaje de finalización y termina al salir de la función
+            <code>main()</code>.
+          </p>
+          <ul class="custom-list">
+            <li>
+              <code>except KeyboardInterrupt</code>: captura la interrupción.
+            </li>
+            <li>
+              <code>print("\n[!] Proceso finalizado por el usuario.")</code>:
+              muestra el mensaje de finalización.
+            </li>
+            <li>
+              Al finalizar normalmente la función <code>main()</code>, el
+              proceso termina con código de salida <code>0</code>.
+            </li>
+          </ul>
+          <div class="card" style="margin-top: 1.5rem">
+            <strong>Observación</strong>. <code>os.getgroups()</code> devuelve
+            los grupos suplementarios del proceso; según el sistema y la
+            configuración, la lista puede incluir también el GID primario.
+            Conviene interpretar su salida junto con los campos
+            <code>Gid</code> y <code>Groups</code> de
+            <code>/proc/&lt;PID&gt;/status</code>, sin asumir que ambas listas
+            representan categorías completamente independientes.
+          </div>
+        </section>
+        <!--PREPARACIÓN DEL LABORATORIO-->
+        <section>
+          <h2>Preparación del laboratorio</h2>
+          <h4>
+            1. Creación de grupos y usuarios específicos para el laboratorio
+          </h4>
+          <!-- TABLA DE GRUPOS Y USUARIOS -->
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Grupos</th>
+                  <th>Usuarios</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>M2shared</code></td>
+                  <td><code>M2user1</code></td>
+                </tr>
+                <tr>
+                  <td><code>M2extra</code></td>
+                  <td><code>M2user2</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo groupadd M2shared
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo groupadd M2extra
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo useradd -m -s /bin/bash M2user1
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo useradd -m -s /bin/bash M2user2</code></pre>
+          <h4>2. Distribución de los usuarios entre los grupos creados</h4>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>M2shared</th>
+                  <th>M2extra</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>M2user1</code></td>
+                  <td><code>M2user1</code></td>
+                </tr>
+                <tr>
+                  <td><code>M2user2</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo usermod -aG M2sahred M2user1
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo usermod -aG M2sahred M2user2
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo usermod -aG M2extra M2user1</code></pre>
+          <h4>3. Comprobración</h4>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> id
+uid=1001(M2user1) gid=1003(M2user1) groups=1003(M2user1),1001(M2shared),1002(M2extra)
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> su - M2user2
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> id
+uid=1002(M2user2) gid=1004(M2user2) groups=1004(M2user2),1001(M2shared)
+</code></pre>
+        </section>
+        <!-- EXPERIMENTO 1 -->
+        <section>
+          <h2>Experimento 1 - Identidad de cuenta</h2>
+        </section>
+        <!-- EXPERIMENTO 2 -->
+        <section>
+          <h2>Experimento 2 - Grupo primario y grupos suplementarios</h2>
+        </section>
+        <!-- EXPERIMENTO 3 -->
+        <section>
+          <h2>Experimento 3 - Almacenamiento de la información</h2>
+        </section>
+        <!-- EXPERIMENTO 4 -->
+        <section>
+          <h2>Experimento 4 - Identidad de un proceso</h2>
+        </section>
+        <!-- EXPERIMENTO 5 -->
+        <section>
+          <h2>
+            Experimento 5 - Modificación de grupos mientras se ejecuta un
+            proceso
+          </h2>
+        </section>
+        <!--TABLA COMPARATIVA-->
+        <section><h2>Mapeo conceptual de identidades</h2></section>
+        <!--CONCLUSIONES GENERALES-->
+        <section><h2>Conclusiones generales</h2></section>
+        <!--EVIDENCIAS DE TERMINAL-->
+        <section><h2>Evidencias de terminal</h2></section>
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
+</html>

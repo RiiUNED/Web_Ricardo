@@ -1,22 +1,243 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Visualización de Imagen</title>
-  <!-- Vinculación al archivo CSS externo -->
-  <link rel="stylesheet" href="../../styles.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linux Lab | M2 Usuarios y Permisos</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../../img/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../../styles.css" />
+  </head>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="M1 index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> M2 Usuarios y Permisos
+        </a>
+        <nav>
+          <a href="../../index.html">Inicio</a>
+          <a href="../../linuxlab/LL index.html" class="active">Linux Lab</a>
+          <a href="../../proyectos/P index.html">Proyectos</a>
+          <a href="../../cv/CV index.html">CV</a>
+        </nav>
+      </div>
+    </header>
 
-  <main class="container">
-    <h1>Módulo 2. Estamos trabajando</h1>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="container">
+        <!-- INTRODUCCIÓN AL MÓDULO -->
+        <section>
+          <h1>Módulo 2. Usuarios y permisos</h1>
 
-    <!-- Contenedor para centrar la imagen -->
-    <div class="img-container">
-      <img src="../../img/obras.webp" alt="Imagen provisional">
-    </div>
-  </main>
+          <p class="lead-text">Laboratorios prácticos sobre:</p>
 
-</body>
+          <ul class="custom-list">
+            <li>
+              <strong>Gestión de usuarios, grupos e identidades POSIX</strong>
+            </li>
+            <li><strong>Permisos de archivos y directorios</strong></li>
+            <li><strong>Bits especiales: SUID, SGID y Sticky Bit</strong></li>
+            <li>
+              <strong
+                >Privilegios administrativos y autorización con sudo</strong
+              >
+            </li>
+          </ul>
+
+          <p class="subtext-tertiary">
+            Se investiga cómo Linux identifica a los usuarios y grupos, cómo se
+            aplican los permisos sobre archivos y directorios y cómo se
+            determinan las operaciones permitidas a cada proceso. Los
+            experimentos permiten observar los efectos de modificar identidades,
+            pertenencias a grupos, propietarios, permisos y mecanismos de
+            elevación de privilegios.
+          </p>
+        </section>
+
+        <!-- RELEVANCIA OPERATIVA -->
+        <section>
+          <div class="callout-box">
+            <span class="tag">user-management</span>
+            <span class="tag">posix-permissions</span>
+            <span class="tag">access-control</span>
+            <span class="tag">privilege-escalation</span>
+            <span class="tag">troubleshooting</span>
+            <span class="tag">sudo</span>
+
+            <h3>&gt;_ Relevancia Operativa</h3>
+
+            <p>
+              Este módulo desarrolla capacidades prácticas para investigar
+              identidades de usuario, evaluar permisos de acceso y diagnosticar
+              problemas de autorización en Linux.
+            </p>
+
+            <p style="margin-top: 0.75rem">
+              Los laboratorios abordan situaciones como accesos denegados pese a
+              una aparente pertenencia al grupo correcto, permisos insuficientes
+              en directorios de una ruta y operaciones privilegiadas cuyo origen
+              debe identificarse. El diagnóstico se apoya en evidencias del
+              sistema y herramientas como
+              <code>id</code>, <code>getent</code>, <code>ls</code>,
+              <code>namei</code>, <code>chmod</code>, <code>chown</code> y
+              <code>sudo</code>.
+            </p>
+          </div>
+        </section>
+
+        <!-- LABORATORIOS DEL MÓDULO -->
+        <section>
+          <h2>Laboratorios del módulo</h2>
+
+          <div class="grid-cards">
+            <!-- M2C1 Usuarios y grupos POSIX -->
+            <article class="card">
+              <span class="tag">M2C1</span>
+              <span class="tag">CONCEPTOS</span>
+
+              <h3>
+                <a href="./Labs/M2C1.html" class="prompt-link">
+                  Usuarios y grupos POSIX
+                </a>
+              </h3>
+
+              <p>
+                Investigación de las identidades de usuario y grupo mediante
+                UID, GID y pertenencias a grupos. Análisis de las cuentas del
+                sistema y de cómo los procesos utilizan su identidad y sus
+                grupos efectivos.
+              </p>
+            </article>
+
+            <!-- M2C2 Permisos POSIX y bits especiales (Próximamente) -->
+            <article class="card card-disabled">
+              <span class="tag">M2C2</span>
+              <span class="tag">CONCEPTOS</span>
+
+              <h3>
+                <span class="prompt-link">
+                  Permisos POSIX y bits especiales
+                </span>
+              </h3>
+
+              <p>
+                Análisis experimental de los permisos de archivos y directorios,
+                la propiedad de los recursos y los efectos de SUID, SGID y
+                Sticky Bit en escenarios de acceso compartido y ejecución de
+                programas.
+              </p>
+
+              <span class="card-status-badge">Próximamente</span>
+            </article>
+
+            <!-- M2T1 Diagnóstico de Permission denied (Próximamente) -->
+            <article class="card card-disabled">
+              <span class="tag">M2T1</span>
+              <span class="tag">TROUBLESHOOTING</span>
+
+              <h3>
+                <span class="prompt-link">
+                  Diagnóstico de Permission denied
+                </span>
+              </h3>
+
+              <p>
+                Investigación de un fallo de acceso a un recurso compartido.
+                Verificación de la identidad del usuario, sus grupos y la cadena
+                de permisos de los directorios hasta localizar la causa del
+                acceso denegado.
+              </p>
+
+              <span class="card-status-badge">Próximamente</span>
+            </article>
+
+            <!-- M2T2 Diagnóstico de privilegios inesperados (Próximamente) -->
+            <article class="card card-disabled">
+              <span class="tag">M2T2</span>
+              <span class="tag">TROUBLESHOOTING</span>
+
+              <h3>
+                <span class="prompt-link">
+                  Diagnóstico de privilegios inesperados
+                </span>
+              </h3>
+
+              <p>
+                Investigación de una operación privilegiada ejecutada por un
+                usuario sin privilegios administrativos generales.
+                Identificación del mecanismo de autorización, comprobación de
+                sus efectos y corrección de una configuración excesivamente
+                permisiva.
+              </p>
+
+              <span class="card-status-badge">Próximamente</span>
+            </article>
+          </div>
+        </section>
+
+        <!-- CONTEXTO Y ENTORNO -->
+        <section>
+          <h2>Contexto y entorno de los laboratorios del módulo</h2>
+
+          <div class="card">
+            <ul class="custom-list">
+              <li>
+                <strong>Sistema operativo:</strong>
+                Ubuntu Server 24.04 LTS
+              </li>
+              <li>
+                <strong>Virtualización:</strong>
+                Oracle VM VirtualBox
+              </li>
+              <li>
+                <strong>Acceso:</strong>
+                SSH (OpenSSH Server)
+              </li>
+              <li>
+                <strong>Máquina virtual:</strong>
+                <code>ubuntu-lab</code>
+              </li>
+              <li>
+                <strong>Usuario de administración habitual:</strong>
+                <code>ricardo</code>
+              </li>
+              <li><strong>Entorno de ejecución:</strong> Python 3.12.3</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
 </html>
