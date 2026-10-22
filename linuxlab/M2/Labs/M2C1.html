@@ -35,8 +35,6 @@
             las credenciales de grupo asociadas a los procesos.
           </p>
           <!-- RELEVANCIA OPERATIVA (práctico para recruiter) -->
-
-          <!-- RELEVANCIA OPERATIVA -->
           <section>
             <div class="callout-box">
               <span class="tag">user-management</span>
@@ -145,7 +143,7 @@ def main():
     print(f" Grupos Suplementarios  : {', '.join(get_group_names(supplementary_gids))}")
     print("=" * 48)
     print("El proceso se mantendrá en ejecución para inspección...")
-    print("Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.")
+    print("Pulsa Ctrl+C para finalizar.")
 
     # Bucle infinito controlado para mantener el proceso vivo
     try:
@@ -375,10 +373,10 @@ if __name__ == "__main__":
               </tbody>
             </table>
           </div>
-          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo usermod -aG M2sahred M2user1
-<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo usermod -aG M2sahred M2user2
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo usermod -aG M2shared M2user1
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo usermod -aG M2shared M2user2
 <span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo usermod -aG M2extra M2user1</code></pre>
-          <h4>3. Comprobración</h4>
+          <h4>3. Comprobación</h4>
           <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> id
 uid=1001(M2user1) gid=1003(M2user1) groups=1003(M2user1),1001(M2shared),1002(M2extra)
 <span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> su - M2user2
@@ -416,8 +414,8 @@ uid=1001(M2user1) gid=1003(M2user1) groups=1003(M2user1),1001(M2shared),1002(M2e
             </li>
             <li>
               <strong><code>gid=1003(M2user1)</code></strong> El grupo principal
-              es el <code>1003</code> y su nombre es <code>M2user1</code>. Éste
-              es el grupo que se le asignara por defecto a cualquier archivo que
+              es el <code>1003</code> y su nombre es <code>M2user1</code>. Este
+              es el grupo que se le asignará por defecto a cualquier archivo que
               se cree.
             </li>
             <li>
@@ -426,7 +424,7 @@ uid=1001(M2user1) gid=1003(M2user1) groups=1003(M2user1),1001(M2shared),1002(M2e
                   >groups=1003(M2user1),1001(M2shared),1002(M2extra)</code
                 ></strong
               >
-              Lista de todos los grupos a los que pertence.
+              Lista de todos los grupos a los que pertenece.
             </li>
           </ul>
           <h4>
@@ -436,16 +434,17 @@ uid=1001(M2user1) gid=1003(M2user1) groups=1003(M2user1),1001(M2shared),1002(M2e
           <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> getent passwd M2user1
 M2user1:x:1001:1003::/home/M2user1:/bin/bash</code></pre>
           <p>
-            Información estática de la cuenta extraída de la cuenta de la base
-            de datos de usuarios <code>/etc/passwd</code>.
+            Información de la cuenta obtenida de la base de datos de usuarios
+            <code>/etc/passwd</code>.
           </p>
           <ul class="custom-list">
             <li>
               <strong><code>M2user1</code></strong> Nombre de usuario.
             </li>
             <li>
-              <strong><code>x</code></strong> Contraseña cifrada y guardada de
-              forma segura en <code>/etc/shadow</code>.
+              <strong><code>x</code></strong> Indicador de que la contraseña
+              cifrada (hash) se almacena normalmente en
+              <code>/etc/shadow</code>.
             </li>
             <li>
               <strong><code>1001</code></strong> UID del usuario.
@@ -455,8 +454,8 @@ M2user1:x:1001:1003::/home/M2user1:/bin/bash</code></pre>
               usuario.
             </li>
             <li>
-              <strong><code>/home/M2user1</code></strong
-              >Ruta absoluta del directorio personal <em>home</em>.
+              <strong><code>/home/M2user1</code></strong> Ruta absoluta del
+              directorio personal <em>home</em>.
             </li>
             <li>
               <strong><code>/bin/bash</code></strong> Intérprete de comandos
@@ -473,7 +472,7 @@ M2extra:x:1002:M2user1
 M2user1:x:1003:
 M2user2:x:1004:</code></pre>
           <p>
-            Filtro de los grupos del sistema que continen M2, mostrando el mapa
+            Filtro de los grupos del sistema que contienen M2, mostrando el mapa
             de membresías.
           </p>
           <ul class="custom-list">
@@ -536,7 +535,7 @@ M2user2:x:1004:</code></pre>
             <strong>información numérica y de control a nivel de núcleo</strong>
             que el sistema operativo utiliza para gestionar la seguridad y los
             permisos, más allá de la simple etiqueta de texto del nombre de
-            usuario
+            usuario.
           </p>
           <p>
             <strong>Los identificadores numéricos exactos UID y GID</strong>.
@@ -550,8 +549,9 @@ M2user2:x:1004:</code></pre>
               >La distribución entre grupos primarios y suplementarios</strong
             >. Detalla explícitamente cuál es el grupo principal y enumera todos
             los grupos secundarios a los que pertenece, incluyendo sus
-            identificadores numéricos, ofreciendo una imagen completa de los
-            privilegios de acceso en una sola ejecución
+            identificadores numéricos, enumerando los grupos asociados a la
+            identidad consultada, cuyos GID pueden intervenir en las
+            comprobaciones de acceso a recursos.
           </p>
           <div class="card">
             <p><strong>Fuente de información e identidad</strong></p>
@@ -594,7 +594,7 @@ logout
 <span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> id
 uid=1002(M2user2) gid=1004(M2user2) groups=1004(M2user2),1001(M2shared),1005(M2extra2)</code></pre>
           <h3>Interpretación</h3>
-          <h4>El grupo principal: <code>1004(M2User2)</code></h4>
+          <h4>El grupo principal: <code>1004(M2user2)</code></h4>
           <ul class="custom-list">
             <li>
               <strong>Grupo privado por defecto</strong>. Su GID primario.
@@ -634,7 +634,7 @@ uid=1002(M2user2) gid=1004(M2user2) groups=1004(M2user2),1001(M2shared),1005(M2e
             </li>
             <li>
               <strong>Demuestra la hipótesis inicial</strong>. Al abrir una
-              nueva sesión <code>su – M2user2</code>, el sistema lee la base de
+              nueva sesión <code>su - M2user2</code>, el sistema lee la base de
               datos actualizada y carga este nuevo grupo dentro de sus
               credenciales activas
             </li>
@@ -650,10 +650,10 @@ uid=1002(M2user2) gid=1004(M2user2) groups=1004(M2user2),1001(M2shared),1005(M2e
           </p>
           <h3>Preparación</h3>
           <ul class="custom-list">
-            <li>Se emplea el proceso de control <code>identity.py</code></li>
+            <li>Se emplea el proceso de control <code>identity.py</code>.</li>
             <li>
               Se emplea la pseudoterminal <code>pts/0</code> para ejecutar el
-              proceso de control y la pseudoterminales <code>pts/1</code> para
+              proceso de control y la pseudoterminal <code>pts/1</code> para
               inspeccionar el proceso.
             </li>
           </ul>
@@ -669,7 +669,7 @@ uid=1002(M2user2) gid=1004(M2user2) groups=1004(M2user2),1001(M2shared),1005(M2e
  Grupos Suplementarios : 1001 (M2shared), 1002 (M2extra), 1003 (M2user1)
 ================================================
 El proceso se mantendrá en ejecución para inspección...
-Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.
+Pulsa Ctrl+C para finalizar.
 </code></pre>
           <h4>
             2. Inspección del proceso <code>identity.py</code> desde
@@ -680,8 +680,8 @@ M2user1 2164 0.0 0.2 18116 10896 pts/0 S+ 19:24 0:00 python3 ./c1m2/identity.py
 <span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> cat /proc/2164/status | grep -E 'Uid|Gid|Groups'
 Uid: 1001 1001 1001 1001
 Gid: 1003 1003 1003 1003
-Groups: 1001 1002 100</code></pre>
-          <h3>Intepretación</h3>
+Groups: 1001 1002 1003</code></pre>
+          <h3>Interpretación</h3>
           <h4>Nexo de identidad: el UID numérico <code>1001</code></h4>
           <ul class="custom-list">
             <li>
@@ -691,8 +691,8 @@ Groups: 1001 1002 100</code></pre>
             </li>
             <li>
               <strong>Evidencia en proceso (Dinámica)</strong>. Al inspeccionar
-              el proceso <code>2163</code> desde el sistema de archivos virtual
-              del núcleo <code>/proc/2164/status</code>, se ecuentra la línea:
+              el proceso <code>2164</code> desde el sistema de archivos virtual
+              del núcleo <code>/proc/2164/status</code>, se encuentra la línea:
               <code>Uid: 1001 1001 1001 1001</code>.
             </li>
             <li>
@@ -703,7 +703,7 @@ Groups: 1001 1002 100</code></pre>
             </li>
           </ul>
           <h4>
-            Nexo de pertenecia principal: el GID primario <code>1003</code>
+            Nexo de pertenencia principal: el GID primario <code>1003</code>
           </h4>
           <ul class="custom-list">
             <li>
@@ -732,7 +732,7 @@ Groups: 1001 1002 100</code></pre>
               de <code>/etc/passwd</code>, grupo primario <code>1003</code>, y
               <code>/etc/group</code>, pertenencia a
               <code>M2shared (1001)</code> y <code>M2extra (1002)</code>, otorga
-              el usuario un abanico de tres grupos.
+              al usuario un abanico de tres grupos.
             </li>
             <li>
               <strong>Evidencia en el proceso (Dinámica)</strong>. El núcleo
@@ -753,12 +753,13 @@ Groups: 1001 1002 100</code></pre>
             <p><strong>Conclusiones</strong></p>
             <ul class="custom-list">
               <li>
-                La relación entre una cuenta de usuario y un proceso en
-                ejecución se valida porque el kernel toma los valores numéricos
-                estáticos definidos en <code>/etc/passwd</code> y
-                <code>/etc/group</code> en el momento de crear el proceso y los
-                inyecta directamente en su estructura de control de memoria,
-                visible en <code>/proc/&lt;PID&gt;/status</code>.
+                La identidad y los grupos asociados al proceso pueden
+                comprobarse mediante <code>/proc/&lt;PID&gt;/status</code>. Al
+                iniciar una sesión, el sistema establece las credenciales del
+                usuario; los procesos iniciados desde ella reciben normalmente
+                esas credenciales a través de la herencia entre procesos. Los
+                valores observados no son una lectura directa y continua de
+                <code>/etc/passwd</code> y <code>/etc/group</code>.
               </li>
               <li>
                 La <strong>identidad de un proceso</strong> no es un nombre,
@@ -781,9 +782,9 @@ Groups: 1001 1002 100</code></pre>
             existe un proceso suyo ya ejecutándose, el proceso no adopta
             automáticamente la nueva pertenencia.
           </p>
-          <p style="margin-bottom: 0.25rem">Se produce un diferencia entre:</p>
+          <p style="margin-bottom: 0.25rem">Se produce una diferencia entre:</p>
           <ul class="custom-list">
-            <li>Indetidad actual de la cuenta.</li>
+            <li>Identidad actual de la cuenta.</li>
             <li>Credenciales/grupos del proceso ya existente.</li>
           </ul>
           <h3>Preparación</h3>
@@ -792,13 +793,13 @@ Groups: 1001 1002 100</code></pre>
             <li>
               Se emplea la pseudoterminal <code>pts/0</code> para ejecutar el
               proceso de control y las pseudoterminales <code>pts/1</code> y
-              <code>pts/2</code>para las inspecciones que serán necesarias
+              <code>pts/2</code> para las inspecciones que serán necesarias
               durante el experimento.
             </li>
           </ul>
           <h3>Acción</h3>
           <h4>
-            1. Ejecucción del proceso <code>identity.py</code> desde
+            1. Ejecución del proceso <code>identity.py</code> desde
             <code>pts/0</code>
           </h4>
           <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> ./c1m2/identity.py
@@ -809,7 +810,7 @@ Groups: 1001 1002 100</code></pre>
  Grupos Suplementarios : 1001 (M2shared), 1002 (M2extra), 1003 (M2user1)
 ================================================
 El proceso se mantendrá en ejecución para inspección...
-Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.</code></pre>
+Pulsa Ctrl+C para finalizar.</code></pre>
           <h4>
             2. Inspección del usuario <code>M2user1</code> desde
             <code>pts/1</code>
@@ -847,7 +848,7 @@ Groups: 1001 1002 1003
  Grupos Suplementarios : 1001 (M2shared), 1002 (M2extra), 1003 (M2user1)
 ================================================
 El proceso se mantendrá en ejecución para inspección...
-Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.</code></pre>
+Pulsa Ctrl+C para finalizar.</code></pre>
           <h4>
             6. Ejecución del proceso <code>identity.py</code> desde
             <code>pts/2</code>
@@ -860,14 +861,15 @@ Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.</code></pre>
  Grupos Suplementarios : 1001 (M2shared), 1002 (M2extra), 1003 (M2user1), 1005 (M2extra2)
 ================================================
 El proceso se mantendrá en ejecución para inspección...
-Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.</code></pre>
+Pulsa Ctrl+C para finalizar.</code></pre>
           <h3>Interpretación</h3>
           <h4>Verificación de la actualización a nivel de cuenta</h4>
           <p>
             Tras ejecutar la orden administrativa
             <code>sudo usermod -aG M2extra2 M2user1</code> y abrir una nueva
-            sesión con <code>su – M2user1</code>, el comando groups muestra de
-            forma inmediata la inclusión en el nuevo grupo:
+            sesión con <code>su - M2user1</code>, el comando
+            <code>groups</code> muestra de forma inmediata la inclusión en el
+            nuevo grupo:
             <code>M2user1 M2shared M2extra M2extra2</code>
           </p>
           <p>
@@ -875,19 +877,19 @@ Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.</code></pre>
             manera instantánea para las cuentas de usuario y sus futuras
             sesiones. Esto establece un contraste clave y directo con los
             procesos en ejecución, evidenciando que la cuenta y el proceso viven
-            el planos de persistencia distintos.
+            en planos de persistencia distintos.
           </p>
-          <h4>Estado congelado del proceso antiguo PID <code>6505</code></h4>
+          <h4>Estado congelado del proceso antiguo PID <code>6506</code></h4>
           <p>
             A pesar de que en la cuenta de usuario ya se ejecutó
             <code>usermod -aG M2extra2 M2user1</code> y una nueva sesión muestra
             el grupo nuevo, el comando
-            <code>cat /proc6506/status | grep Groups</code>
+            <code>cat /proc/6506/status | grep Groups</code>
             devuelve: <code>Groups: 1001 1002 1003</code><br />El volcado con ps
             confirma: <code>SUPGRP: M2shared,M2extra,M2user1</code>
           </p>
           <p>
-            <u>El grupo <code>M2extra2</code>brilla por su ausencia</u>. Esto
+            <u>El grupo <code>M2extra2</code> brilla por su ausencia</u>. Esto
             demuestra que los procesos heredan los grupos suplementarios de
             forma estática en el preciso instante en que son creados. Un cambio
             en las bases de datos del sistema <code>/etc/group</code> no afecta
@@ -901,7 +903,7 @@ Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.</code></pre>
             Antes de arrancar el PID <code>6571</code>, la terminal
             <code>/dev/pts/0</code>
             sigue siendo la misma donde se ejecuta el comando original, sin
-            haber cerrado sesión <code>su – M2user1</code>. <br />Como
+            haber cerrado sesión <code>su - M2user1</code>. <br />Como
             resultado, el nuevo proceso <code>6571</code> se lanzó con los
             mismos grupos antiguos:<br />
             <code
@@ -920,8 +922,9 @@ Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.</code></pre>
             Éxito del nuevo proceso PID <code>6661</code> con sesión actualizada
           </h4>
           <p>
-            En la nueva terminal <code>dev/pts/2</code>, tras iniciar una sesión
-            limpia como <code>M2user1</code>, el script ejecutado como PID
+            En la nueva terminal <code>/dev/pts/2</code>, tras iniciar una
+            sesión limpia como <code>M2user1</code>, el script ejecutado como
+            PID
             <code>6661</code>
             muestra por fin:<br /><code
               >Grupos Suplementarios: 1001 (M2shared), 1002 (M2extra), 1003
@@ -942,7 +945,7 @@ Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.</code></pre>
             </p>
             <ul class="custom-list">
               <li>
-                El proceso antiguo PID <code>6506</code> continía ejecutándose
+                El proceso antiguo PID <code>6506</code> continúa ejecutándose
                 con su matriz de grupos original
                 <code>Groups: 1001 1002 1003</code> a pesar de que la cuenta ya
                 formaba parte de <code>M2extra2</code>.
@@ -1150,7 +1153,7 @@ M2user2:x:1004:</code></pre>
  Grupos Suplementarios : 1001 (M2shared), 1002 (M2extra), 1003 (M2user1)
 ================================================
 El proceso se mantendrá en ejecución para inspección...
-Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.</code></pre>
+Pulsa Ctrl+C para finalizar.</code></pre>
         <h4>Inicio del proceso desde una sesión nueva</h4>
         <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> ./c1m2/identity.py
 === INFORMACIÓN DE CREDENCIALES DEL PROCESO ===
@@ -1160,7 +1163,7 @@ Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.</code></pre>
  Grupos Suplementarios : 1001 (M2shared), 1002 (M2extra), 1003 (M2user1), 1005 (M2extra2)
 ================================================
 El proceso se mantendrá en ejecución para inspección...
-Pulsa Ctrl+C para finalizar o inspectúscialo desde otra terminal.</code></pre>
+Pulsa Ctrl+C para finalizar.</code></pre>
       </div>
     </main>
 
