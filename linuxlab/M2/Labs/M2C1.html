@@ -46,19 +46,19 @@
               <h3>&gt;_ Relevancia Operativa</h3>
 
               <p>
-                Este laboratorio demuestra la capacidad práctica para consultar
-                e interpretar la identidad de usuarios y grupos en Linux
-                mediante herramientas como <code>id</code> y
-                <code>getent</code>, e inspeccionar las credenciales asociadas a
-                procesos en ejecución mediante
-                <code>/proc/&lt;PID&gt;/status</code>.
+                Este laboratorio presenta un caso práctico de diagnóstico de
+                incidencias de acceso en Linux: comprobar si un proceso dispone
+                de las credenciales de grupo necesarias, aunque la pertenencia
+                del usuario a esos grupos haya cambiado.
               </p>
 
               <p style="margin-top: 0.75rem">
-                También demuestra la capacidad de investigar incidencias de
-                acceso relacionadas con cambios en la pertenencia a grupos,
-                distinguiendo entre la información actual de una cuenta y las
-                credenciales que conserva un proceso en ejecución.
+                Para investigarlo, se consulta la identidad de las cuentas con
+                <code>id</code> y <code>getent</code> y se inspeccionan las
+                credenciales de los procesos en ejecución mediante
+                <code>/proc/&lt;PID&gt;/status</code>, contrastando la
+                configuración actual de la cuenta con el estado efectivo del
+                proceso.
               </p>
             </div>
           </section>
