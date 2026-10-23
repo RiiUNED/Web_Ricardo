@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linux Lab | M2C2 Permisos POSIX y bits especiales</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../../../img/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../../../styles.css" />
+  </head>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="../M2 index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> M2 Usuarios y Permisos
+        </a>
+        <nav>
+          <a href="../../../index.html">Inicio</a>
+          <a href="../../../linuxlab/LL index.html" class="active">Linux Lab</a>
+          <a href="../../../proyectos/P index.html">Proyectos</a>
+          <a href="../../../cv/CV index.html">CV</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="container">
+        <!-- ENCABEZADO Y METADATOS DEL LABORATORIO -->
+        <header class="lab-header">
+          <h1>Laboratorio M2C2 &#45; Permisos POSIX y bits especiales</h1>
+          <p class="lead-text">
+            Investigación experimental del control de acceso a archivos y
+            directorios Linux.
+          </p>
+          <!-- RELEVANCIA OPERATIVA (práctico para recruiter) -->
+          <section>
+            <div class="callout-box">
+              <span class="tag">file-permissions</span>
+              <span class="tag">posix-permissions</span>
+              <span class="tag">sgid</span>
+              <span class="tag">sticky-bit</span>
+              <span class="tag">access-control</span>
+
+              <h3>&gt;_ Relevancia Operativa</h3>
+              <p>
+                Este laboratorio investiga cinco aspectos del control de acceso
+                en Linux: la interpretación de permisos simbólicos y octales,
+                las diferencias entre permisos de archivos y directorios, el
+                efecto de cambiar el grupo propietario, la herencia de grupo
+                mediante <code>SGID</code> y las restricciones de borrado y
+                renombrado que introduce <code>Sticky Bit</code>.
+              </p>
+              <p style="margin-top: 0.75rem">
+                Los experimentos se realizan con dos usuarios y un directorio
+                compartido, comprobando los resultados de cada cambio mediante
+                operaciones reales sobre los archivos.
+              </p>
+              <p style="margin-top: 0.75rem">
+                Las pruebas permiten identificar por qué un usuario puede listar
+                un directorio, pero no consultar sus entradas; por qué cambiar
+                el grupo de un archivo habilita su lectura sin modificar sus
+                permisos; y cómo <code>SGID</code> y
+                <code>Sticky Bit</code> modifican el comportamiento de un
+                espacio compartido.
+              </p>
+              <p style="margin-top: 0.75rem">
+                El laboratorio documenta cada resultado con evidencias de
+                terminal y relaciona la configuración de permisos con el acceso
+                efectivo obtenido.
+              </p>
+            </div>
+          </section>
+        </header>
+        <!-- OBJETIVOS -->
+
+        <section>
+          <h2>Objetivos</h2>
+          <ul class="custom-list">
+            <li>
+              <strong>Interpretar permisos simbólicos y octales.</strong>
+              Identificar la correspondencia entre ambas representaciones y
+              analizar los cambios de permisos realizados con
+              <code>chmod</code> durante los experimentos.
+            </li>
+            <li>
+              <strong
+                >Diferenciar los permisos de archivos y directorios.</strong
+              >
+              Determinar cómo los permisos de lectura, escritura y ejecución
+              determinan las operaciones que pueden realizarse sobre archivos y
+              directorios, y comprobar sus efectos mediante pruebas de acceso,
+              listado y modificación de entradas.
+            </li>
+            <li>
+              <strong
+                >Analizar el efecto de cambiar propietario y grupo.</strong
+              >
+              Comprobar cómo las modificaciones realizadas con
+              <code>chown</code> y <code>chgrp</code> afectan al acceso de
+              distintos usuarios a un archivo, manteniendo constantes sus
+              permisos.
+            </li>
+            <li>
+              <strong
+                >Verificar la herencia de grupo mediante
+                <code>SGID</code>.</strong
+              >
+              Analizar cómo los archivos creados en un directorio con este bit
+              activo heredan el grupo propietario del directorio.
+            </li>
+            <li>
+              <strong
+                >Examinar las restricciones de borrado y renombrado del
+                <code>Sticky Bit</code>.</strong
+              >
+              Analizar cómo este bit limita la eliminación y el cambio de nombre
+              de archivos en un directorio compartido según la propiedad del
+              archivo y del directorio.
+            </li>
+          </ul>
+        </section>
+
+        <!-- PREPARACIÓN DEL LABORATORIO-->
+        <section>
+          <h2>Preparación del laboratorio</h2>
+          <h4>Grupos y usuarios específicos del laboratorio</h4>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Grupo</th>
+                  <th>Usuarios</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td rowspan="2"><code>M2shared</code></td>
+                  <td><code>M2user1</code></td>
+                </tr>
+                <tr>
+                  <td><code>M2user2</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h4>Creación del directorio de trabajo <code>/srv/M2shared</code></h4>
+          <p>
+            Creación del directorio compartido <code>/srv/M2shared</code> y
+            asignación de <code>M2user1</code> como propietario y
+            <code>M2shared</code> como grupo propietario.
+          </p>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:/$</span> cd srv
+<span class="prompt-symbol">ricardo@ubuntu-lab:/srv$</span> sudo mkdir M2shared
+<span class="prompt-symbol">ricardo@ubuntu-lab:/srv$</span> ls -l
+total 4
+drwxr-xr-x 2 root root 4096 Oct 20 00:11 M2shared</code></pre>
+          <h4>
+            Configuración del directorio compartido <code>/srv/M2shared</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:/srv$</span> sudo chown M2user1:M2shared /srv/M2shared/
+<span class="prompt-symbol">ricardo@ubuntu-lab:/srv$</span> sudo chmod 0770 M2shared/</code></pre>
+          <h4>Inspección del archivo de trabajo <code>/srv/M2shared</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> stat /srv/M2shared/
+  File: /srv/M2shared/
+  Size: 4096            Blocks: 8          IO Block: 4096   directory
+Device: 252,0   Inode: 404523      Links: 4
+Access: (0770/drwxrwx---)  Uid: ( 1001/ M2user1)   Gid: ( 1001/M2shared)
+Access: 2026-10-23 02:53:29.434748341 +0000
+Modify: 2026-10-23 02:51:28.339253742 +0000
+Change: 2026-10-23 03:04:47.966828204 +0000
+ Birth: 2026-10-20 00:11:55.515016540 +0000</code></pre>
+        </section>
+
+        <!-- EXPERIMENTO 1 -->
+        <section>
+          <h2>Experimento 1 - Permisos de archivo y representación octal</h2>
+          <h3>Hipótesis</h3>
+          <p>
+            Al modificar los permisos de un archivo, cambian las operaciones que
+            puede realizar cada categoría del usuario.
+          </p>
+          <h3>Intervención</h3>
+          <h4>1. Creación del archivo control <code>control.txt</code></h4>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> touch /srv/M2shared/control.txt</code></pre>
+          <h4>2. Configuración del archivo de control</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo chgrp M2shared /srv/M2shared/control.txt
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> chmod 700 /srv/M2shared/control.txt</code></pre>
+          <h4>3. Escritura en el archivo control</h4>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> date > /srv/M2shared/control.txt</code></pre>
+          <h4>4. Inspección del archivo control</h4>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span>  cat /srv/M2shared/control.txt
+Fri Oct 23 04:43:57 AM UTC 2026</code></pre>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/control.txt
+  File: /srv/M2shared/control.txt
+  Size: 32              Blocks: 8          IO Block: 4096   regular file
+Device: 252,0   Inode: 404562      Links: 1
+Access: (0700/-rwx------)  Uid: ( 1001/ M2user1)   Gid: ( 1001/M2shared)
+Access: 2026-10-23 04:41:59.852537074 +0000
+Modify: 2026-10-23 04:43:57.503492353 +0000
+Change: 2026-10-23 04:43:57.503492353 +0000
+ Birth: 2026-10-23 04:41:59.851537058 +0000</code></pre>
+          <h4>
+            5. Lectura del archivo <code>control.txt</code> por parte del
+            usuario <code>M2user2</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cat /srv/M2shared/control.txt
+cat: /srv/M2shared/control.txt: Permission denied</code></pre>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> chmod 740 /srv/M2shared/control.txt
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/control.txt
+  File: /srv/M2shared/control.txt
+  Size: 32              Blocks: 8          IO Block: 4096   regular file
+Device: 252,0   Inode: 404562      Links: 1
+Access: (0740/-rwxr-----)  Uid: ( 1001/ M2user1)   Gid: ( 1001/M2shared)
+Access: 2026-10-23 04:41:59.852537074 +0000
+Modify: 2026-10-23 04:43:57.503492353 +0000
+Change: 2026-10-23 04:45:23.757924091 +0000
+ Birth: 2026-10-23 04:41:59.851537058 +0000</code></pre>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cat /srv/M2shared/control.txt
+Fri Oct 23 04:43:57 AM UTC 2026</code></pre>
+          <h4>
+            6. Escritura en el archivo <code>control.txt</code> por parte del
+            usuario <code>M2user2</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> date >> /srv/M2shared/control.txt
+-bash: /srv/M2shared/control.txt: Permission denied</code></pre>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> chmod 760 /srv/M2shared/control.txt
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/control.txt
+  File: /srv/M2shared/control.txt
+  Size: 32              Blocks: 8          IO Block: 4096   regular file
+Device: 252,0   Inode: 404562      Links: 1
+Access: (0760/-rwxrw----)  Uid: ( 1001/ M2user1)   Gid: ( 1001/M2shared)
+Access: 2026-10-23 04:46:26.913971614 +0000
+Modify: 2026-10-23 04:43:57.503492353 +0000
+Change: 2026-10-23 04:48:17.947811846 +0000
+ Birth: 2026-10-23 04:41:59.851537058 +0000</code></pre>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> date >> /srv/M2shared/control.txt
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cat /srv/M2shared/control.txt
+Fri Oct 23 04:43:57 AM UTC 2026
+Fri Oct 23 04:49:10 AM UTC 2026</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            Los resultados muestran cómo los permisos de un archivo determinan
+            las operaciones que pueden realizar sus usuarios, y cómo se
+            relaciona su representación octal con los permisos simbólicos
+            <code>rwx</code>.
+          </p>
+          <p>
+            La notación octal expresa los permisos de propietario, grupo y otros
+            mediante tres cifras: <code>7</code> representa <code>rwx</code>,
+            <code>4</code> representa <code>r--</code> y
+            <code>6</code> representa <code>rw-</code>. Cada cifra resulta de
+            sumar los valores de los permisos correspondientes: lectura (4),
+            escritura (2) y ejecución (1).
+          </p>
+          <ul class="custom-list">
+            <li>
+              <code>0700 (rwx------)</code>. Únicamente el propietario
+              <code>M2user1</code> dispone de permisos de lectura, escritura y
+              ejecución. <code>M2user2</code>, del grupo propietario, no puede
+              leer el archivo porque los permisos del grupo son
+              <code>---</code>.
+            </li>
+            <li>
+              <code>0740 (rwxr-----)</code>
+              . El propietario conserva todos sus permisos y el grupo obtiene
+              lectura
+              <code>(r--)</code>. Como
+              <code>M2user2</code>
+              pertenece a
+              <code>M2shared</code>, puede leer el contenido, pero no
+              modificarlo al carecer de permiso de escritura.
+            </li>
+            <li>
+              <code>0760 (rwxrw----)</code>. El grupo obtiene también escritura
+              <code>(rw-)</code>. <code>M2user2</code> puede ahora añadir
+              contenido al archivo, como demuestra la incorporación de una
+              segunda línea.
+            </li>
+          </ul>
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Conclusión</strong><br />
+              El experimento demuestra que pertenecer al grupo propietario no
+              concede automáticamente acceso a un archivo: las operaciones
+              permitidas dependen de los permisos asignados a ese grupo. Al
+              modificar estos permisos con <code>chmod</code>, cambia la
+              relación efectiva de <code>M2user2</code> con el mismo archivo,
+              desde la denegación de lectura hasta la posibilidad de leer y
+              escribir.
+            </p>
+          </div>
+        </section>
+        <!-- EXPERIMENTO 2 -->
+        <section>
+          <h2>Experimento 2 - Permisos sobre directorios</h2>
+          <h3>Preparación</h3>
+        </section>
+        <!-- EXPERIMENTO 3 
+        <section>
+          <h2>Experimento 3 </h2>
+          <h3></h3>
+          
+        </section>
+        <-- EXPERIMENTO 4 
+        <section>
+          <h2>
+            Experimento 4 
+          </h2>
+          <h3></h3>
+          
+        </section>
+        <-- EXPERIMENTO 5 
+        <section>
+          <h2>
+            Experimento 4 
+          </h2>
+          <h3></h3>
+          
+        </section>
+        <--TABLA COMPARATIVA
+        
+        <--CONCLUSIONES GENERALES
+        
+        EVIDENCIAS DE TERMINAL-->
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
+</html>
