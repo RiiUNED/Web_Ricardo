@@ -183,14 +183,14 @@ Change: 2026-10-23 03:04:47.966828204 +0000
             puede realizar cada categoría del usuario.
           </p>
           <h3>Intervención</h3>
-          <h4>1. Creación del archivo control <code>control.txt</code></h4>
+          <h4>1. Creación del archivo <code>control.txt</code></h4>
           <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> touch /srv/M2shared/control.txt</code></pre>
-          <h4>2. Configuración del archivo de control</h4>
+          <h4>2. Configuración de <code>control.txt</code></h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo chgrp M2shared /srv/M2shared/control.txt
 <span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> chmod 700 /srv/M2shared/control.txt</code></pre>
-          <h4>3. Escritura en el archivo control</h4>
+          <h4>3. Escritura en el archivo <code>control.txt</code></h4>
           <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> date > /srv/M2shared/control.txt</code></pre>
-          <h4>4. Inspección del archivo control</h4>
+          <h4>4. Inspección del archivo <code>control.txt</code></h4>
           <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span>  cat /srv/M2shared/control.txt
 Fri Oct 23 04:43:57 AM UTC 2026</code></pre>
           <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/control.txt
@@ -295,36 +295,689 @@ Fri Oct 23 04:49:10 AM UTC 2026</code></pre>
         </section>
         <!-- EXPERIMENTO 2 -->
         <section>
-          <h2>Experimento 2 - Permisos sobre directorios</h2>
+          <h2>Experimento 2 - Propietario y grupo</h2>
+
           <h3>Preparación</h3>
+          <h4>Creación del archivo <code>archivo.txt</code></h4>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> date > /srv/M2shared/archivo.txt</code></pre>
+          <h4>Inspección del archivo <code>archivo.txt</code></h4>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> cat /srv/M2shared/archivo.txt
+Tue Oct 20 01:43:55 AM UTC 2026
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/archivo.txt
+ File: /srv/M2shared/archivo.txt
+ Size: 32 Blocks: 8 IO Block: 4096 regular file
+Device: 252,0 Inode: 404524 Links: 1
+Access: (0750/-rwxr-x---) Uid: ( 1001/ M2user1) Gid: ( 1003/ M2user1)
+Access: 2026-10-20 01:44:10.993338296 +0000
+Modify: 2026-10-20 01:43:55.911121435 +0000
+Change: 2026-10-20 01:43:55.911121435 +0000
+ Birth: 2026-10-20 00:17:51.002162337 +0000</code></pre>
+          <h3>Hipótesis</h3>
+          <p>
+            Al cambiar el grupo del archivo <code>archivo.txt</code> de
+            <code>M2user1</code> a <code>M2shared</code>, al que pertenece el
+            usuario <code>M2user2</code>, manteniendo los permisos del archivo
+            en <code>0750</code>, el acceso de <code>M2user2</code> cambiará
+            inmediatamente:
+          </p>
+          <ul class="custom-list">
+            <li>
+              el usuario <code>M2user2</code> dejará de ser evaluado por la
+              categoría <em>otros</em>, permisos <code>---</code>.
+            </li>
+            <li>
+              el usuario <code>M2user2</code> pasará ser evaluado por la
+              categoría <em>grupo</em>, permisos <code>r-x</code>.
+            </li>
+          </ul>
+          <h3>Intervención</h3>
+          <h4>Primera intervención con el usuario <code>M2user2</code></h4>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> date > /srv/M2shared/archivo.txt
+-bash: /srv/M2shared/archivo.txt: Permission denied</code></pre>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cat /srv/M2shared/archivo.txt
+cat: /srv/M2shared/archivo.txt: Permission denied</code></pre>
+          <h4>Cambio de grupo en el recurso <code>archivo.txt</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo chgrp M2shared /srv/M2shared/archivo.txt</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> su - M2user1
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/archivo.txt
+ File: /srv/M2shared/archivo.txt
+ Size: 32 Blocks: 8 IO Block: 4096 regular file
+Device: 252,0 Inode: 404524 Links: 1
+Access: (0750/-rwxr-x---) Uid: ( 1001/ M2user1) Gid: ( 1001/M2shared)
+Access: 2026-10-20 01:44:10.993338296 +0000
+Modify: 2026-10-20 01:43:55.911121435 +0000
+Change: 2026-10-20 01:50:59.416270951 +0000
+ Birth: 2026-10-20 00:17:51.002162337 +0000</code></pre>
+          <h4>Segunda intervención con con el usuario <code>M2user2</code></h4>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cat /srv/M2shared/archivo.txt
+Tue Oct 20 01:43:55 AM UTC 2026</code></pre>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> date > /srv/M2shared/archivo.txt
+-bash: /srv/M2shared/archivo.txt: Permission denied</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            Inicialmente, <code>archivo.txt</code> pertenece a
+            <code>M2user1</code> y al grupo <code>M2user1</code>, con permisos
+            <code>0750 (rwxr-x---)</code>. Como <code>M2user2</code> no
+            pertenece al grupo propietario, se le aplican los permisos de la
+            categoría <em>otros</em> <code>(---)</code>, por lo que no puede
+            leer ni escribir el archivo.
+          </p>
+          <p>
+            Tras cambiar el grupo propietario a <code>M2shared</code> mediante
+            <code>chgrp</code>, los permisos siguen siendo <code>0750</code>,
+            pero <code>M2user2</code>, que pertenece a ese grupo, pasa a
+            disponer de los permisos de grupo <code>(r-x)</code>. Por ello,
+            puede leer el contenido del archivo, pero no modificarlo, ya que el
+            grupo no tiene permiso de escritura <code>(w)</code>.
+          </p>
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Conclusión</strong><br />El experimento demuestra que
+              <u
+                >los permisos y la propiedad del archivo deben analizarse
+                conjuntamente</u
+              >. Los bits de permisos no han cambiado; lo que cambia es la
+              categoría cuyos permisos se aplican a <code>M2user2</code>. La
+              operación <code>chgrp</code>
+              permite así modificar el acceso al recurso sin cambiar su
+              propietario ni su modo de permisos.
+            </p>
+          </div>
         </section>
-        <!-- EXPERIMENTO 3 
+        <!-- EXPERIMENTO 3 -->
         <section>
-          <h2>Experimento 3 </h2>
-          <h3></h3>
-          
+          <h2>Experimento 3 - Permisos sobre directorios</h2>
+          <h3>Hipótesis</h3>
+          <p>
+            Los permisos de un directorio condicionan el acceso a sus entradas y
+            las operaciones que pueden realizarse sobre ellas.
+          </p>
+          <h4>Permiso de lectura sin ejecución</h4>
+          <p>
+            Un usuario que tenga permiso de lectura, pero no de ejecución, puede
+            listar los nombres de los archivos del directorio, pero no puede
+            acceder a ellos<br />No puede cambiar atravesar el directorio, ni
+            consultar sus metadatos.
+          </p>
+          <h4>Permiso de ejecución sin lectura</h4>
+          <p>
+            Un usuario que tenga permiso de ejecución, pero no de lectura, puede
+            atravesar el directorio, pero no puede listar su contenido.
+          </p>
+          <h3>Preparación</h3>
+          <h4>Configuración del directorio <code>/srv/M2shared/</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo chmod 700 /srv/M2shared/</code></pre>
+          <h4>Inspección del directorio <code>/srv/M2shared/</code></h4>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> namei -l /srv/M2shared/
+f: /srv/M2shared/
+drwxr-xr-x root    root     /
+drwxr-xr-x root    root     srv
+drwx------ M2user1 M2shared M2shared</code></pre>
+          <h3>Intervención</h3>
+          <h4>Usuario <code>M2user2</code> sin permiso de lectura</h4>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> ls -l /srv/
+total 4
+drwx------ 4 M2user1 M2shared 4096 Oct 23 04:41 M2shared</code></pre>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> ls -l /srv/M2shared/
+ls: cannot open directory '/srv/M2shared/': Permission denied</code></pre>
+          <h4>
+            Usuario <code>M2user2</code> con permiso de lectura y sin permiso de
+            ejecución
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo chmod 740 /srv/M2shared/
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> su - M2user2
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> namei -l /srv/M2shared/
+f: /srv/M2shared/
+drwxr-xr-x root    root     /
+drwxr-xr-x root    root     srv
+drwxr----- M2user1 M2shared M2shared</code></pre>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cd /srv/
+<span class="prompt-symbol">M2user2@ubuntu-lab:/srv$</span> cd M2shared/
+-bash: cd: M2shared/: Permission denied</code></pre>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> ls /srv/M2shared/
+ls: cannot access '/srv/M2shared/control.txt': Permission denied
+archivo.txt  control.txt</code></pre>
+          <h4>
+            Usuario <code>M2user2</code> con permiso de lectura y con permiso de
+            ejecución
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo chmod 750 /srv/M2shared/
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> su - M2user2
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> namei -l /srv/M2shared/
+f: /srv/M2shared/
+drwxr-xr-x root    root     /
+drwxr-xr-x root    root     srv
+drwxr-x--- M2user1 M2shared M2shared</code></pre>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cd /srv/M2shared/
+<span class="prompt-symbol">M2user2@ubuntu-lab:/srv/M2shared$</span></code></pre>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:/srv/M2shared$</span> ls
+archivo.txt  control.txt</code></pre>
+          <h4>
+            Usuario <code>M2user2</code> sin permiso de lectura y con permiso de
+            ejecución
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo chmod 710 /srv/M2shared/
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> su - M2user2
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> namei -l /srv/M2shared/
+f: /srv/M2shared/
+drwxr-xr-x root    root     /
+drwxr-xr-x root    root     srv
+drwx--x--- M2user1 M2shared M2shared</code></pre>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cd /srv/M2shared/
+<span class="prompt-symbol">M2user2@ubuntu-lab:/srv/M2shared$</span></code></pre>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:/srv/M2shared$</span> ls
+ls: cannot open directory '.': Permission denied</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            Los resultados muestran que los permisos de un directorio controlan
+            operaciones distintas: la lectura <code>(r)</code> permite consultar
+            la lista de nombres de sus entradas, mientras que la ejecución
+            <code>(x)</code> permite atravesarlo y buscar entradas dentro de
+            él..
+          </p>
+          <p>
+            La representación octal permite identificar estas diferencias: la
+            cifra <code>4</code> representa lectura, la cifra
+            <code>1</code> ejecución y la cifra <code>5</code> la combinación de
+            ambas. En todos los casos, los permisos se aplican a las categorías
+            propietario, grupo y otros, respectivamente.
+          </p>
+          <ul class="custom-list">
+            <li>
+              <code>0700 (rwx------)</code>. <code>M2user2</code> no dispone de
+              permisos sobre el directorio. Puede identificar su nombre al
+              listar <code>/srv</code>, pero no listar el contenido de
+              <code>/srv/M2shared</code>.
+            </li>
+            <li>
+              <code>0740 (rwxr-----)</code>
+              . El grupo dispone de lectura <code>(r--)</code>, pero carece de
+              ejecución. <code>M2user2</code> puede obtener los nombres
+              <code>archivo.txt</code> y <code>control.txt</code> al listar el
+              directorio, pero no puede atravesarlo ni consultar los metadatos
+              de esa entrada.
+            </li>
+            <li>
+              <code>0750 (rwxr-x---)</code>. El grupo dispone de lectura y
+              ejecución <code>(r-x)</code>. <code>M2user2</code> puede atravesar
+              el directorio y listar sus entradas.
+            </li>
+            <li>
+              <code>0710 (rwx--x---)</code>. El grupo dispone únicamente de
+              ejecución <code>(--x)</code>. <code>M2user2</code> puede atravesar
+              el directorio, pero no listar su contenido.
+            </li>
+          </ul>
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Conclusión</strong><br />
+              El experimento demuestra que la lectura y la ejecución de un
+              directorio no son permisos equivalentes ni intercambiables. Para
+              listar sus entradas se necesita lectura; para atravesarlo y
+              acceder a ellas mediante sus nombres se necesita ejecución. <br />
+              operaciones sobre los archivos contenidos también dependen de los
+              permisos de esos archivos y de los directorios que forman la ruta.
+            </p>
+          </div>
         </section>
-        <-- EXPERIMENTO 4 
+
+        <!-- EXPERIMENTO 4 -->
+        <section>
+          <h2>Experimento 4 - <code>SGID</code> en un directorio compartido</h2>
+          <h3>Hipótesis</h3>
+          <p>
+            Al activarse <code>SGID</code> sobre el directorio, los archivos
+            creados dentro heredan el grupo del directorio en lugar de utilizar
+            el grupo primario del usuario que los crea
+          </p>
+          <h3>Intervención</h3>
+          <h4>1. Creación de directorios</h4>
+          <p style="margin-bottom: 0.5rem">
+            Creación del directorio <code>m2c2e4</code> para aislar el
+            experimento
+          </p>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> mkdir /srv/M2shared/m2c2e4</code></pre>
+          <p style="margin-bottom: 0.5rem">
+            Creación del directorio control <code>controldir</code> sin
+            <code>SGID</code>
+          </p>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> mkdir /srv/M2shared/m2c2e4/controldir</code></pre>
+          <p style="margin-bottom: 0.5rem">
+            Creación del directorio <code>sgiddir</code> en el que se acitvará
+            el bit <code>SGID</code>
+          </p>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> mkdir /srv/M2shared/m2c2e4/sgiddir</code></pre>
+          <h4>2. Inspección de directorios</h4>
+
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/m2c2e4/controldir
+ File: /srv/M2shared/m2c2e4/controldir
+ Size: 4096 Blocks: 8 IO Block: 4096 directory
+Device: 252,0 Inode: 404522 Links: 2
+Access: (0775/drwxrwxr-x) Uid: ( 1001/ M2user1) Gid: ( 1003/ M2user1)
+Access: 2026-10-21 05:45:47.210152477 +0000
+Modify: 2026-10-21 05:43:12.217111110 +0000
+Change: 2026-10-21 05:43:12.217111110 +0000
+ Birth: 2026-10-21 05:43:12.217111110 +0000</code></pre>
+
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/m2c2e4/sgiddir
+ File: /srv/M2shared/m2c2e4/sgiddir
+ Size: 4096 Blocks: 8 IO Block: 4096 directory
+Device: 252,0 Inode: 404540 Links: 2
+Access: (0775/drwxrwxr-x) Uid: ( 1001/ M2user1) Gid: ( 1003/ M2user1)
+Access: 2026-10-21 05:45:47.210152477 +0000
+Modify: 2026-10-21 05:44:21.882031909 +0000
+Change: 2026-10-21 05:44:21.882031909 +0000
+ Birth: 2026-10-21 05:44:21.882031909 +0000</code></pre>
+          <h4>3. Configuración del directorio <code>sgiddir</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo chown M2user1:M2shared /srv/M2shared/m2c2e4/sgiddir
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> chmod 2770 /srv/M2shared/m2c2e4/sgiddir/</code></pre>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/m2c2e4/sgiddir/
+ File: /srv/M2shared/m2c2e4/sgiddir/
+ Size: 4096 Blocks: 8 IO Block: 4096 directory
+Device: 252,0 Inode: 404540 Links: 2
+Access: (2770/drwxrws---) Uid: ( 1001/ M2user1) Gid: ( 1001/M2shared)
+Access: 2026-10-21 06:11:29.717664419 +0000
+Modify: 2026-10-21 06:01:23.845543933 +0000
+Change: 2026-10-21 06:17:43.271177114 +0000
+ Birth: 2026-10-21 05:44:21.882031909 +0000</code></pre>
+          <h4>4. Creación de archivos</h4>
+          <p style="margin-bottom: 0.5rem">
+            Creación del archivo de control <code>/controldir/control.txt</code>
+          </p>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> touch /srv/M2shared/m2c2e4/controldir/control.txt
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/m2c2e4/controldir/control.txt
+ File: /srv/M2shared/m2c2e4/controldir/control.txt
+ Size: 0 Blocks: 0 IO Block: 4096 regular empty file
+Device: 252,0 Inode: 404541 Links: 1
+Access: (0664/-rw-rw-r--) Uid: ( 1001/ M2user1) Gid: ( 1003/ M2user1)
+Access: 2026-10-21 06:20:20.774092481 +0000
+Modify: 2026-10-21 06:20:20.774092481 +0000
+Change: 2026-10-21 06:20:20.774092481 +0000
+ Birth: 2026-10-21 06:20:20.774092481 +0000</code></pre>
+          <p style="margin-bottom: 0.5rem">
+            Creación del archivo <code>/sgiddir/archivo.txt</code>
+          </p>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> touch /srv/M2shared/m2c2e4/sgiddir/archivo.txt
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/m2c2e4/sgiddir/archivo.txt
+ File: /srv/M2shared/m2c2e4/sgiddir/archivo.txt
+ Size: 0 Blocks: 0 IO Block: 4096 regular empty file
+Device: 252,0 Inode: 404542 Links: 1
+Access: (0664/-rw-rw-r--) Uid: ( 1001/ M2user1) Gid: ( 1001/M2shared)
+Access: 2026-10-21 06:21:25.523881359 +0000
+Modify: 2026-10-21 06:21:25.523881359 +0000
+Change: 2026-10-21 06:21:25.523881359 +0000
+ Birth: 2026-10-21 06:21:25.523881359 +0000</code></pre>
+          <h4>5. Manipulación de archivos</h4>
+          <p style="margin-bottom: 0.5rem">Datos de control</p>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> date > /srv/M2shared/m2c2e4/controldir/control.txt
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> date > /srv/M2shared/m2c2e4/sgiddir/archivo.txt</code></pre>
+          <p style="margin-bottom: 0.5rem">
+            Manipulación del archivo <code>/control/control.txt</code> por el
+            usuario <code>M2user2</code>
+          </p>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cat /srv/M2shared/m2c2e4/controldir/control.txt
+Wed Oct 21 06:22:18 AM UTC 2026
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> date >> /srv/M2shared/m2c2e4/controldir/control.txt
+-bash: /srv/M2shared/m2c2e4/controldir/control.txt: Permission denied
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cat /srv/M2shared/m2c2e4/controldir/control.txt
+Wed Oct 21 06:22:18 AM UTC 2026</code></pre>
+          <p style="margin-bottom: 0.5rem">
+            Manipulación del archivo <code>/sgiddir/archivo.txt</code> por el
+            usuario <code>M2user2</code>
+          </p>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cat /srv/M2shared/m2c2e4/sgiddir/archivo.txt
+Wed Oct 21 06:22:26 AM UTC 2026
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> date >> /srv/M2shared/m2c2e4/sgiddir/archivo.txt
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cat /srv/M2shared/m2c2e4/sgiddir/archivo.txt
+Wed Oct 21 06:22:26 AM UTC 2026
+Wed Oct 21 06:24:15 AM UTC 2026</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            En el directorio de control, sin <code>SGID</code>,
+            <code>/control/control.txt</code> hereda el grupo primario de
+            <code>M2user1 (M2user1)</code>. Aunque <code>M2user2</code> puede
+            leer el archivo, no puede modificarlo porque no dispone de permiso
+            de escritura sobre él.
+          </p>
+          <p>
+            En cambio, <code>sgiddir</code> tiene permisos
+            <code>2770 (drwxrws---)</code>: el primer dígito
+            <code>2</code> activa <code>SGID</code> y la <code>s</code> en los
+            permisos del grupo indica que el bit está activo junto con el
+            permiso de ejecución. Al crear <code>/sgiddir/archivo.txt</code>, el
+            archivo hereda el grupo propietario <code>M2shared</code>, en lugar
+            del grupo primario de <code>M2user1</code>.<br />Como
+            <code>M2user2</code> pertenece a <code>M2shared</code>, dispone de
+            los permisos de grupo <code>rw-</code> del archivo y puede tanto
+            leer su contenido como añadir una segunda línea.
+          </p>
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Conclusión</strong><br />
+              El experimento demuestra que <code>SGID</code> en un directorio
+              compartido permite que los archivos nuevos hereden su grupo
+              propietario, facilitando la colaboración entre usuarios sin
+              necesidad de cambiar manualmente el grupo de cada archivo. La
+              posibilidad efectiva de modificar esos archivos sigue dependiendo
+              de sus permisos.
+            </p>
+          </div>
+        </section>
+        <!-- EXPERIMENTO 5 -->
         <section>
           <h2>
-            Experimento 4 
+            Experimento 5 - <code>Sticky Bit</code> en un directorio compartido
           </h2>
-          <h3></h3>
-          
+          <h3>Hipótesis</h3>
+          <p>
+            Al activar el <code>Sticky Bit</code> en un directorio, un usuario
+            con permisos de escritura y ejecución sobre el directorio no puede
+            eliminar ni renombrar libremente los archivos de otros usuarios.
+          </p>
+          <h3>Intervención</h3>
+          <h4>
+            1. Creación de un directorio con permisos de lectura y escritura
+            para todos los usuarios y sin <code>Sticky Bit</code> activado
+          </h4>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> mkdir /srv/M2shared/m2c2e5
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> chmod 777 /srv/M2shared/m2c2e5</code></pre>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/m2c2e5
+ File: /srv/M2shared/m2c2e5
+ Size: 4096 Blocks: 8 IO Block: 4096 directory
+Device: 252,0 Inode: 404543 Links: 2
+Access: (0777/drwxrwxrwx) Uid: ( 1001/ M2user1) Gid: ( 1003/ M2user1)
+Access: 2026-10-21 09:28:26.069796162 +0000
+Modify: 2026-10-21 09:28:26.069796162 +0000
+Change: 2026-10-21 09:28:46.717134824 +0000
+ Birth: 2026-10-21 09:28:26.069796162 +0000</code></pre>
+          <h4>
+            2. Manipulación de archivos en el directorio <code>m2c2e5</code>
+          </h4>
+          <p style="margin-bottom: 0.5rem">
+            Creación de archivos por el usuario <code>M2user1</code>
+          </p>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> touch /srv/M2shared/m2c2e5/renombradoU1.txt
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> touch /srv/M2shared/m2c2e5/borradoU1.txt
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> ls /srv/M2shared/m2c2e5/
+borradoU1.txt renombradoU1.txt</code></pre>
+          <p style="margin-bottom: 0.5rem">
+            Manipulación de archivos por el usuario <code>M2user2</code>
+          </p>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> mv /srv/M2shared/m2c2e5/renombradoU1.txt /srv/M2shared/m2c2e5/renombradoU2.txt
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> rm /srv/M2shared/m2c2e5/borradoU1.txt
+rm: remove write-protected regular empty file '/srv/M2shared/m2c2e5/borradoU1.txt'? y
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> ls /srv/M2shared/m2c2e5/
+renombradoU2.txt</code></pre>
+          <h4>
+            3. Activación del <code>Sticky Bit</code> en el directorio
+            <code>m2c2e5</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> chmod 1777 /srv/M2shared/m2c2e5/
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/m2c2e5/
+ File: /srv/M2shared/m2c2e5/
+ Size: 4096 Blocks: 8 IO Block: 4096 directory
+Device: 252,0 Inode: 404543 Links: 2
+Access: (1777/drwxrwxrwt) Uid: ( 1001/ M2user1) Gid: ( 1003/ M2user1)
+Access: 2026-10-21 09:36:09.845386147 +0000
+Modify: 2026-10-21 09:35:54.648137873 +0000
+Change: 2026-10-21 09:38:13.241401299 +0000
+ Birth: 2026-10-21 09:28:26.069796162 +0000</code></pre>
+          <h4>
+            4. Manipulación de los archivos en el directorio
+            <code>c2m2e5</code> con el <code>Sticky Bit</code> activado
+          </h4>
+          <p style="margin-bottom: 0.5rem">
+            Reconfiguración de los archivos en el directorio <code>m2c2e5</code>
+          </p>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> mv /srv/M2shared/m2c2e5/renombradoU2.txt /srv/M2shared/m2c2e5/renombradoU1.txt
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> touch /srv/M2shared/m2c2e5/borradoU1.txt
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> ls /srv/M2shared/m2c2e5/
+borradoU1.txt renombradoU1.txt</code></pre>
+          <p style="margin-bottom: 0.5rem">
+            Manipulación de los archivos en el directorio
+            <code>m2c2e5</code> por el usuario <code>M2user2</code>
+          </p>
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> mv /srv/M2shared/m2c2e5/renombradoU1.txt /srv/M2shared/m2c2e5/renombradoU2.txt
+mv: cannot move '/srv/M2shared/m2c2e5/renombradoU1.txt' to
+'/srv/M2shared/m2c2e5/renombradoU2.txt': Operation not permitted
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> rm /srv/M2shared/m2c2e5/borradoU1.txt
+rm: remove write-protected regular empty file '/srv/M2shared/m2c2e5/borradoU1.txt'? y
+rm: cannot remove '/srv/M2shared/m2c2e5/borradoU1.txt': Operation not permitted
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> ls /srv/M2shared/m2c2e5/
+borradoU1.txt renombradoU1.txt</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            La comparación de ambos estados del directorio demuestra el efecto
+            del <code>Sticky Bit</code> sobre la eliminación y el renombrado de
+            archivos:
+          </p>
+          <ul class="custom-list">
+            <li>
+              <strong>Sin <code>Stiky Bit (0777)</code></strong
+              >. <code>M2user2</code> puede renombrar y eliminar los archivos
+              creados por <code>M2user1</code>. Los permisos de escritura y
+              ejecución sobre el directorio permiten modificar sus entradas,
+              independientemente de quién sea el propietario de los archivos.
+            </li>
+            <li>
+              <strong>Con <code>Sticky Bit (1777)</code></strong
+              >. Las mismas operaciones fallan con
+              <code>Operation not permitted</code>. Aunque
+              <code>M2user2</code> conserva permisos de escritura y ejecución
+              sobre el directorio, no puede renombrar ni eliminar archivos cuyo
+              propietario es <code>M2user1</code>.
+            </li>
+            <li>
+              <strong>Representación del permiso</strong>. El modo
+              <code>1777</code> incorpora el <code>Sticky Bit</code>, visible
+              como <code>t</code> en los permisos del directorio
+              <code>(drwxrwxrwt)</code>. Este bit restringe quién puede eliminar
+              o renombrar las entradas, sin retirar los permisos de escritura y
+              ejecución del resto de usuarios.
+            </li>
+          </ul>
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Conclusión</strong><br />
+              El experimento confirma que el <code>Sticky Bit</code> permite
+              mantener un directorio compartido con permisos de escritura para
+              varios usuarios, limitando la eliminación y el renombrado de
+              archivos ajenos.
+            </p>
+          </div>
         </section>
-        <-- EXPERIMENTO 5 
+        <!--RESUMEN DE LOS MECANIMOS DE CONTROL DE ACCESO -->
         <section>
-          <h2>
-            Experimento 4 
-          </h2>
-          <h3></h3>
-          
+          <h2>Resumen de los mecanismos de control de acceso en Linux</h2>
+
+          <h3>Mecanismos de permisos y propiedad en Linux</h3>
+
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Configuración</th>
+                  <th>Modificación</th>
+                  <th>Resultado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>chmod</code></td>
+                  <td>
+                    Los bits ordinarios de permisos POSIX <code>rwx</code> de un
+                    recurso.
+                  </td>
+                  <td>
+                    Determina las operaciones permitidas: lectura
+                    <code>r</code>, escritura <code>w</code> y ejecución o
+                    acceso <code>x</code>, según se trate de un archivo o
+                    directorio.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>chown</code></td>
+                  <td>
+                    La identidad del propietario (UID) de un archivo o
+                    directorio.
+                  </td>
+                  <td>
+                    Modifica la categoría de permisos aplicable al propietario
+                    del recurso y, por tanto, puede cambiar el acceso efectivo
+                    del usuario.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>chgrp</code></td>
+                  <td>
+                    El grupo propietario de un recurso, sin alterar sus bits de
+                    permisos.
+                  </td>
+                  <td>
+                    Puede cambiar el acceso efectivo de los usuarios según su
+                    pertenencia al grupo propietario y los permisos asignados a
+                    ese grupo.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>SGID</code> en directorio</td>
+                  <td>
+                    Activa un bit especial de herencia en el directorio.<br /><code
+                      >s</code
+                    >
+                    en los permisos del grupo / dígito octal <code>2</code>.
+                  </td>
+                  <td>
+                    Hace que los archivos y subdirectorios creados en su
+                    interior hereden el grupo propietario del directorio.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>Sticky Bit</code></td>
+                  <td>
+                    Activa un bit especial de restricción en un directorio
+                    compartido.<br /><code>t</code> en los permisos de otros /
+                    dígito octal <code>1</code>.
+                  </td>
+                  <td>
+                    Restringe la eliminación y el renombrado de entradas a sus
+                    propietarios, al propietario del directorio y a
+                    <code>root</code>, sin perjuicio de los demás requisitos de
+                    acceso.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
-        <--TABLA COMPARATIVA
-        
-        <--CONCLUSIONES GENERALES
-        
-        EVIDENCIAS DE TERMINAL-->
+        <!--CONCLUSIONES GENERALES-->
+        <section>
+          <h2>Conclusiones</h2>
+          <ul class="custom-list">
+            <li>
+              <strong
+                >Los permisos POSIX determinan las operaciones permitidas sobre
+                archivos y directorios</strong
+              >. La representación octal permite identificar de forma compacta
+              los permisos asignados al propietario, al grupo y a otros
+              usuarios. En los directorios, la lectura permite listar las
+              entradas y la ejecución permite atravesarlos y acceder a ellas
+              mediante sus nombres.
+            </li>
+            <li>
+              <strong
+                >Los permisos y la propiedad deben analizarse
+                conjuntamente</strong
+              >. Las pruebas con
+              <code>chmod</code>
+              muestran que modificar los bits de permisos puede habilitar o
+              impedir operaciones sobre un mismo archivo. Por su parte,
+              <code>chgrp</code>
+              modifica el grupo propietario y puede cambiar el acceso efectivo
+              de un usuario sin alterar los permisos ni el propietario del
+              archivo.
+            </li>
+            <li>
+              <strong
+                ><code>SGID</code> facilita la colaboración en directorios
+                compartidos.</strong
+              >
+              Al activar este bit en un directorio, los archivos y
+              subdirectorios creados en su interior heredan el grupo propietario
+              del directorio. Esto permite compartir recursos entre miembros de
+              un grupo, aunque las operaciones disponibles siguen dependiendo de
+              los permisos de cada recurso.
+            </li>
+            <li>
+              <strong
+                ><code>Sticky Bit</code> limita la eliminación y el renombrado
+                de archivos en directorios compartidos</strong
+              >. La comparación entre los modos <code>0777</code> y
+              <code>1777</code> demuestra que, aunque varios usuarios tengan
+              permisos de escritura y ejecución sobre el directorio, no todos
+              pueden eliminar o renombrar las entradas creadas por otros
+              usuarios.
+            </li>
+          </ul>
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Resumen</strong><br />
+              En conjunto, el laboratorio demuestra que el control de acceso en
+              Linux no depende únicamente de los bits <code>rwx</code>: también
+              intervienen la propiedad del recurso, la pertenencia a grupos y
+              los bits especiales del directorio. La combinación de estos
+              mecanismos permite ajustar tanto las operaciones individuales
+              sobre los recursos como las condiciones de colaboración entre
+              usuarios.
+            </p>
+          </div>
+        </section>
+        <!-- EVIDENCIAS DE TERMINAL-->
+        <section>
+          <h2>Evidencias de terminal</h2>
+          <h3>
+            <code>SGID</code>. Herencia del grupo en un directorio compartido
+          </h3>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> chmod 2770 /srv/M2shared/m2c2e4/sgiddir/</code></pre>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/m2c2e4/sgiddir/
+ File: /srv/M2shared/m2c2e4/sgiddir/
+ Size: 4096 Blocks: 8 IO Block: 4096 directory
+Device: 252,0 Inode: 404540 Links: 2
+Access: (2770/drwxrws---) Uid: ( 1001/ M2user1) Gid: ( 1001/M2shared)
+Access: 2026-10-21 06:11:29.717664419 +0000
+Modify: 2026-10-21 06:01:23.845543933 +0000
+Change: 2026-10-21 06:17:43.271177114 +0000
+ Birth: 2026-10-21 05:44:21.882031909 +0000</code></pre>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> touch /srv/M2shared/m2c2e4/sgiddir/archivo.txt
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/m2c2e4/sgiddir/archivo.txt
+ File: /srv/M2shared/m2c2e4/sgiddir/archivo.txt
+ Size: 0 Blocks: 0 IO Block: 4096 regular empty file
+Device: 252,0 Inode: 404542 Links: 1
+Access: (0664/-rw-rw-r--) Uid: ( 1001/ M2user1) Gid: ( 1001/M2shared)
+Access: 2026-10-21 06:21:25.523881359 +0000
+Modify: 2026-10-21 06:21:25.523881359 +0000
+Change: 2026-10-21 06:21:25.523881359 +0000
+ Birth: 2026-10-21 06:21:25.523881359 +0000</code></pre>
+          <h3><code>Sticky Bit</code>. Restricción de borrado y renombrado</h3>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> chmod 1777 /srv/M2shared/m2c2e5/
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> stat /srv/M2shared/m2c2e5/
+ File: /srv/M2shared/m2c2e5/
+ Size: 4096 Blocks: 8 IO Block: 4096 directory
+Device: 252,0 Inode: 404543 Links: 2
+Access: (1777/drwxrwxrwt) Uid: ( 1001/ M2user1) Gid: ( 1003/ M2user1)
+Access: 2026-10-21 09:36:09.845386147 +0000
+Modify: 2026-10-21 09:35:54.648137873 +0000
+Change: 2026-10-21 09:38:13.241401299 +0000
+ Birth: 2026-10-21 09:28:26.069796162 +0000</code></pre>
+ <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> mv /srv/M2shared/m2c2e5/renombradoU1.txt /srv/M2shared/m2c2e5/renombradoU2.txt
+mv: cannot move '/srv/M2shared/m2c2e5/renombradoU1.txt' to
+'/srv/M2shared/m2c2e5/renombradoU2.txt': Operation not permitted
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> rm /srv/M2shared/m2c2e5/borradoU1.txt
+rm: remove write-protected regular empty file '/srv/M2shared/m2c2e5/borradoU1.txt'? y
+rm: cannot remove '/srv/M2shared/m2c2e5/borradoU1.txt': Operation not permitted
+<span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> ls /srv/M2shared/m2c2e5/
+borradoU1.txt renombradoU1.txt</code></pre>
+        </section>
       </div>
     </main>
 
