@@ -96,12 +96,11 @@
             </li>
             <li>
               <strong
-                >Analizar el efecto de cambiar propietario y grupo.</strong
+                >Analizar el efecto de cambiar el grupo propietario.</strong
               >
-              Comprobar cómo las modificaciones realizadas con
-              <code>chown</code> y <code>chgrp</code> afectan al acceso de
-              distintos usuarios a un archivo, manteniendo constantes sus
-              permisos.
+              Comprobar cómo la modificación realizada con
+              <code>chgrp</code> afecta al acceso de distintos usuarios a un
+              archivo, manteniendo constantes sus permisos y propietario.
             </li>
             <li>
               <strong
@@ -162,7 +161,9 @@ drwxr-xr-x 2 root root 4096 Oct 20 00:11 M2shared</code></pre>
           </h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:/srv$</span> sudo chown M2user1:M2shared /srv/M2shared/
 <span class="prompt-symbol">ricardo@ubuntu-lab:/srv$</span> sudo chmod 0770 M2shared/</code></pre>
-          <h4>Inspección del archivo de trabajo <code>/srv/M2shared</code></h4>
+          <h4>
+            Inspección del directorio de trabajo <code>/srv/M2shared</code>
+          </h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> stat /srv/M2shared/
   File: /srv/M2shared/
   Size: 4096            Blocks: 8          IO Block: 4096   directory
@@ -264,10 +265,8 @@ Fri Oct 23 04:49:10 AM UTC 2026</code></pre>
               <code>---</code>.
             </li>
             <li>
-              <code>0740 (rwxr-----)</code>
-              . El propietario conserva todos sus permisos y el grupo obtiene
-              lectura
-              <code>(r--)</code>. Como
+              <code>0740 (rwxr-----)</code>. El propietario conserva todos sus
+              permisos y el grupo obtiene lectura <code>(r--)</code>. Como
               <code>M2user2</code>
               pertenece a
               <code>M2shared</code>, puede leer el contenido, pero no
@@ -295,7 +294,7 @@ Fri Oct 23 04:49:10 AM UTC 2026</code></pre>
         </section>
         <!-- EXPERIMENTO 2 -->
         <section>
-          <h2>Experimento 2 - Propietario y grupo</h2>
+          <h2>Experimento 2 - Grupo propietario</h2>
 
           <h3>Preparación</h3>
           <h4>Creación del archivo <code>archivo.txt</code></h4>
@@ -326,7 +325,7 @@ Change: 2026-10-20 01:43:55.911121435 +0000
               categoría <em>otros</em>, permisos <code>---</code>.
             </li>
             <li>
-              el usuario <code>M2user2</code> pasará ser evaluado por la
+              el usuario <code>M2user2</code> pasará a ser evaluado por la
               categoría <em>grupo</em>, permisos <code>r-x</code>.
             </li>
           </ul>
@@ -348,7 +347,7 @@ Access: 2026-10-20 01:44:10.993338296 +0000
 Modify: 2026-10-20 01:43:55.911121435 +0000
 Change: 2026-10-20 01:50:59.416270951 +0000
  Birth: 2026-10-20 00:17:51.002162337 +0000</code></pre>
-          <h4>Segunda intervención con con el usuario <code>M2user2</code></h4>
+          <h4>Segunda intervención con el usuario <code>M2user2</code></h4>
           <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> cat /srv/M2shared/archivo.txt
 Tue Oct 20 01:43:55 AM UTC 2026</code></pre>
           <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> date > /srv/M2shared/archivo.txt
@@ -396,8 +395,8 @@ Tue Oct 20 01:43:55 AM UTC 2026</code></pre>
           <p>
             Un usuario que tenga permiso de lectura, pero no de ejecución, puede
             listar los nombres de los archivos del directorio, pero no puede
-            acceder a ellos<br />No puede cambiar atravesar el directorio, ni
-            consultar sus metadatos.
+            acceder a ellos.<br />No puede atravesar el directorio ni consultar
+            los metadatos de sus entradas.
           </p>
           <h4>Permiso de ejecución sin lectura</h4>
           <p>
@@ -472,8 +471,7 @@ ls: cannot open directory '.': Permission denied</code></pre>
             Los resultados muestran que los permisos de un directorio controlan
             operaciones distintas: la lectura <code>(r)</code> permite consultar
             la lista de nombres de sus entradas, mientras que la ejecución
-            <code>(x)</code> permite atravesarlo y buscar entradas dentro de
-            él..
+            <code>(x)</code> permite atravesarlo y buscar entradas dentro de él.
           </p>
           <p>
             La representación octal permite identificar estas diferencias: la
@@ -514,9 +512,10 @@ ls: cannot open directory '.': Permission denied</code></pre>
               El experimento demuestra que la lectura y la ejecución de un
               directorio no son permisos equivalentes ni intercambiables. Para
               listar sus entradas se necesita lectura; para atravesarlo y
-              acceder a ellas mediante sus nombres se necesita ejecución. <br />
-              operaciones sobre los archivos contenidos también dependen de los
-              permisos de esos archivos y de los directorios que forman la ruta.
+              acceder a ellas mediante sus nombres se necesita ejecución.
+              <br />Las operaciones sobre los archivos contenidos también
+              dependen de los permisos de esos archivos y de los directorios que
+              forman la ruta.
             </p>
           </div>
         </section>
@@ -528,7 +527,7 @@ ls: cannot open directory '.': Permission denied</code></pre>
           <p>
             Al activarse <code>SGID</code> sobre el directorio, los archivos
             creados dentro heredan el grupo del directorio en lugar de utilizar
-            el grupo primario del usuario que los crea
+            el grupo primario del usuario que los crea.
           </p>
           <h3>Intervención</h3>
           <h4>1. Creación de directorios</h4>
@@ -543,7 +542,7 @@ ls: cannot open directory '.': Permission denied</code></pre>
           </p>
           <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> mkdir /srv/M2shared/m2c2e4/controldir</code></pre>
           <p style="margin-bottom: 0.5rem">
-            Creación del directorio <code>sgiddir</code> en el que se acitvará
+            Creación del directorio <code>sgiddir</code> en el que se activará
             el bit <code>SGID</code>
           </p>
           <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> mkdir /srv/M2shared/m2c2e4/sgiddir</code></pre>
@@ -724,7 +723,7 @@ Change: 2026-10-21 09:38:13.241401299 +0000
  Birth: 2026-10-21 09:28:26.069796162 +0000</code></pre>
           <h4>
             4. Manipulación de los archivos en el directorio
-            <code>c2m2e5</code> con el <code>Sticky Bit</code> activado
+            <code>m2c2e5</code> con el <code>Sticky Bit</code> activado
           </h4>
           <p style="margin-bottom: 0.5rem">
             Reconfiguración de los archivos en el directorio <code>m2c2e5</code>
@@ -753,7 +752,7 @@ borradoU1.txt renombradoU1.txt</code></pre>
           </p>
           <ul class="custom-list">
             <li>
-              <strong>Sin <code>Stiky Bit (0777)</code></strong
+              <strong>Sin <code>Sticky Bit (0777)</code></strong
               >. <code>M2user2</code> puede renombrar y eliminar los archivos
               creados por <code>M2user1</code>. Los permisos de escritura y
               ejecución sobre el directorio permiten modificar sus entradas,
@@ -786,7 +785,7 @@ borradoU1.txt renombradoU1.txt</code></pre>
             </p>
           </div>
         </section>
-        <!--RESUMEN DE LOS MECANIMOS DE CONTROL DE ACCESO -->
+        <!--RESUMEN DE LOS MECANISMOS DE CONTROL DE ACCESO -->
         <section>
           <h2>Resumen de los mecanismos de control de acceso en Linux</h2>
 
@@ -818,13 +817,13 @@ borradoU1.txt renombradoU1.txt</code></pre>
                 <tr>
                   <td><code>chown</code></td>
                   <td>
-                    La identidad del propietario (UID) de un archivo o
-                    directorio.
+                    La identidad del propietario (UID) y, si se especifica, el
+                    grupo propietario (GID) de un archivo o directorio.
                   </td>
                   <td>
-                    Modifica la categoría de permisos aplicable al propietario
-                    del recurso y, por tanto, puede cambiar el acceso efectivo
-                    del usuario.
+                    Puede cambiar los permisos aplicables al usuario al
+                    modificar el propietario y, si se especifica, el grupo
+                    propietario del recurso.
                   </td>
                 </tr>
                 <tr>
@@ -969,7 +968,7 @@ Access: 2026-10-21 09:36:09.845386147 +0000
 Modify: 2026-10-21 09:35:54.648137873 +0000
 Change: 2026-10-21 09:38:13.241401299 +0000
  Birth: 2026-10-21 09:28:26.069796162 +0000</code></pre>
- <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> mv /srv/M2shared/m2c2e5/renombradoU1.txt /srv/M2shared/m2c2e5/renombradoU2.txt
+          <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> mv /srv/M2shared/m2c2e5/renombradoU1.txt /srv/M2shared/m2c2e5/renombradoU2.txt
 mv: cannot move '/srv/M2shared/m2c2e5/renombradoU1.txt' to
 '/srv/M2shared/m2c2e5/renombradoU2.txt': Operation not permitted
 <span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> rm /srv/M2shared/m2c2e5/borradoU1.txt
