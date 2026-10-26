@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linux Lab | M2T1 Usuario sin acceso</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../../../img/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../../../styles.css" />
+  </head>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="../M2 index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> M2 Usuarios y Permisos
+        </a>
+        <nav>
+          <a href="../../../index.html">Inicio</a>
+          <a href="../../../linuxlab/LL index.html" class="active">Linux Lab</a>
+          <a href="../../../proyectos/P index.html">Proyectos</a>
+          <a href="../../../cv/CV index.html">CV</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="container">
+        <!-- ENCABEZADO Y METADATOS DEL LABORATORIO -->
+        <header class="lab-header">
+          <h1>Laboratorio M2T1 &#45; Usuario sin acceso</h1>
+          <h3>Diagnóstico de permisos</h3>
+          <p class="lead-text">
+            Diagnóstico y resolución de un error
+            <code>Permission denied</code> mediante la comprobación de grupos,
+            la auditoría de permisos de la ruta y la corrección de los permisos
+            de travesía de un directorio padre.
+          </p>
+          <!-- RELEVANCIA OPERATIVA -->
+          <section>
+            <div class="callout-box">
+              <span class="tag">permissions</span>
+              <span class="tag">access-control</span>
+              <span class="tag">directory-traversal</span>
+
+              <h3>&gt;_ Relevancia Operativa</h3>
+
+              <p>
+                Diagnóstico de errores <code>Permission denied</code> mediante
+                la comprobación de grupos con <code>id</code>, la inspección de
+                permisos con <code>ls -l</code> y la auditoría de la ruta con
+                <code>namei -l</code>. Identificación del directorio que bloquea
+                el acceso, corrección con <code>chmod</code> y verificación de
+                la recuperación del acceso al recurso.
+              </p>
+            </div>
+          </section>
+        </header>
+
+        <!-- CONTEXTO DEL INCIDENTE -->
+        <section>
+          <h2>Contexto del incidente</h2>
+
+          <p>
+            El usuario <code>M2user1</code> del equipo de desarrollo
+            <code>M2app-team</code> necesita acceder al archivo de configuración
+            <code>/var/M2apps/share/config/settings.conf</code> ubicado en un
+            directorio compartido.<br />
+            Aunque pertenece al grupo previsto y el archivo tiene permisos de
+            grupo aparentemente adecuados, el acceso falla con
+            <code>Permission denied</code>.
+          </p>
+        </section>
+
+        <!--INCIDENCIAS OBSERVADAS -->
+        <section>
+          <h2>Incidencias observadas</h2>
+          <h3>Inspección local del recurso</h3>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$ ls</span> -ld /var/M2apps/share/config
+ls: cannot access '/var/M2apps/share/config': Permission denied</code></pre>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$ ls</span> -l /var/M2apps/share/config/settings.conf
+ls: cannot access '/var/M2apps/share/config/settings.conf': Permission denied</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            Los intentos de inspeccionar el directorio <code>config</code> y el
+            archivo <code>settings.conf</code> devuelven
+            <code>Permission denied</code>.<br />
+            El usuario no puede acceder a estos recursos, pero estas salidas no
+            permiten determinar qué componente de la ruta bloquea el acceso ni
+            cuáles son los permisos de los recursos interiores.
+          </p>
+        </section>
+
+        <!--INVESTIGACIÓN Y CAUSA RAÍZ -->
+        <section>
+          <h2>Investigación y causa raíz</h2>
+          <h3>Identidad efectiva y grupos</h3>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> whoami && id && groups
+M2user1
+uid=1001(M2user1) gid=1003(M2user1)
+groups=1003(M2user1),1001(M2shared),1002(M2extra),1005(M2extra2),1006(M2app-team)
+M2user1 M2shared M2extra M2extra2 M2app-team</code></pre>
+          <h3>Auditoría de la cadena de directorios</h3>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> namei -l /var/M2apps/share/config/settings.conf
+f: /var/M2apps/share/config/settings.conf
+drwxr-xr-x root root       /
+drwxr-xr-x root root       var
+drwxr-xr-x root root       M2apps
+drwx------ root M2app-team share
+                            config - Permission denied</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            La salida de <code>id</code> confirma que
+            <code>M2user1</code> pertenece al grupo suplementario
+            <code>M2app-team</code>. Sin embargo, <code>namei -l</code> muestra
+            que el directorio <code>/var/M2apps/share</code> tiene permisos
+            <code>700</code> y pertenece a <code>root:M2app-team</code>.<br />
+            Estos permisos solo conceden acceso al propietario, por lo que el
+            usuario carece de permiso de travesía sobre dicho directorio. La
+            inspección de la ruta se interrumpe en ese punto, antes de llegar a
+            <code>config/settings.conf</code>.
+          </p>
+        </section>
+
+        <!--CORRECCIONES APLICADAS -->
+        <section>
+          <h2>Correcciones aplicadas</h2>
+          <p>
+            <strong>Corrección de permisos</strong>. El comando
+            <code>chmod 750</code> establece los permisos
+            <code>rwxr-x---</code> en <code>/var/M2apps/share/</code>. El
+            propietario <code>root</code> conserva el control total, el grupo
+            dispone de lectura y travesía, y los demás usuarios no tienen
+            permisos sobre el directorio.
+          </p>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo chmod 750 /var/M2apps/share/</code></pre>
+          <h3>Resultado esperado</h3>
+          <p>
+            <code>M2user1</code>, al pertenecer a <code>M2app-team</code>,
+            debería poder atravesar el directorio <code>share</code> y acceder
+            al archivo <code>settings.conf</code>, siempre que los permisos de
+            los directorios intermedios y del archivo lo permitan.
+          </p>
+          <h3>Verificación</h3>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> ls -ld /var/M2apps/share
+drwxr-x--- 3 root M2app-team 4096 Oct 25 11:08 /var/M2apps/share
+<span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> ls -l /var/M2apps/share/config/settings.conf
+-rw-rw-r-- 1 root M2app-team 0 Oct 25 11:09 /var/M2apps/share/config/settings.conf</code></pre>
+          <p>
+            Se ha recuperado el acceso de inspección al archivo
+            <code>settings.conf</code>.
+          </p>
+        </section>
+
+        <!--VERIFICACIONES POSTERIORES-->
+        <section>
+          <h2>Verificaciones posteriores</h2>
+          <h3>Matriz de verificación</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Prueba de validación</th>
+                <th>Comando de ejecución</th>
+                <th style="width: 30%">Resultado esperado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Auditoría de la ruta</td>
+                <td>
+                  <code style="white-space: nowrap"
+                    >namei -l /var/M2apps/share/config/settings.conf</code
+                  >
+                </td>
+                <td>
+                  Todos los directorios de la ruta permiten la travesía
+                  <code>x</code>.
+                </td>
+              </tr>
+              <tr>
+                <td>Prueba de lectura</td>
+                <td>
+                  <code style="white-space: nowrap"
+                    >cat /var/M2apps/share/config/settings.conf</code
+                  >
+                </td>
+                <td>El archivo se abre sin errores de permisos.</td>
+              </tr>
+            </tbody>
+          </table>
+          <pre
+            style="margin-top: 1.5rem"
+          ><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> namei -l /var/M2apps/share/config/settings.conf
+f: /var/M2apps/share/config/settings.conf
+drwxr-xr-x root root       /
+drwxr-xr-x root root       var
+drwxr-xr-x root root       M2apps
+drwxr-x--- root M2app-team share
+drwxrwxr-x root M2app-team config
+-rw-rw-r-- root M2app-team settings.conf</code></pre>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> cat /var/M2apps/share/config/settings.conf
+Mon Oct 26 10:52:41 AM UTC 2026</code></pre>
+        </section>
+        <!-- EVIDENCIAS DE TERMINAL -->
+        <section>
+          <h2>Evidencias de terminal</h2>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> whoami && id && groups
+M2user1
+uid=1001(M2user1) gid=1003(M2user1)
+groups=1003(M2user1),1001(M2shared),1002(M2extra),1005(M2extra2),1006(M2app-team)
+M2user1 M2shared M2extra M2extra2 M2app-team</code></pre>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> namei -l /var/M2apps/share/config/settings.conf
+f: /var/M2apps/share/config/settings.conf
+drwxr-xr-x root root       /
+drwxr-xr-x root root       var
+drwxr-xr-x root root       M2apps
+drwx------ root M2app-team share
+                            config - Permission denied</code></pre>
+          <pre><code><span class="prompt-symbol">M2user1@ubuntu-lab:~$</span> namei -l /var/M2apps/share/config/settings.conf
+f: /var/M2apps/share/config/settings.conf
+drwxr-xr-x root root       /
+drwxr-xr-x root root       var
+drwxr-xr-x root root       M2apps
+drwxr-x--- root M2app-team share
+drwxrwxr-x root M2app-team config
+-rw-rw-r-- root M2app-team settings.conf</code></pre>
+        </section>
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
+</html>
