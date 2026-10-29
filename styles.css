@@ -449,6 +449,7 @@ header.site-header nav a.active {
   margin: 1.5rem 0;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Estructura base de la tabla */
@@ -477,6 +478,10 @@ table th {
 /* Alternancia de filas para mejor lectura de datos */
 table tr:nth-child(odd) {
   background-color: #ffffff;
+}
+
+.table-container td code {
+  white-space: nowrap;
 }
 
 /* FOOTER */
