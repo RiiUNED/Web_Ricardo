@@ -951,15 +951,9 @@ Pulsa Ctrl+C para finalizar.</code></pre>
                 formaba parte de <code>M2extra2</code>.
               </li>
               <li>
-                <u
-                  >Los permisos y credenciales de un proceso son una fotografía
-                  fija</u
-                >
-                tomada exclusivamente en el momento exacto de su creación.<br />Cualquier
-                cambio administrativo posterior sobre la cuenta es invisible
-                para los procesos vivos, requiriendo necesariamente el inicio de
-                un nuevo proceso desde una sesión actualizada para que herede
-                las nuevas credenciales.
+                Los cambios en la pertenencia a grupos de una cuenta no se
+                propagan automáticamente a los procesos existentes, que pueden
+                conservar las credenciales con las que fueron iniciados.
               </li>
             </ul>
           </div>
