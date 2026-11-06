@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linux Lab | M3C1 Almacenamiento tradicional y VFS</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../../../img/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../../../styles.css" />
+  </head>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="../M3 index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> M3 Discos y LVM
+        </a>
+        <nav>
+          <a href="../../../index.html">Inicio</a>
+          <a href="../../../linuxlab/LL index.html" class="active">Linux Lab</a>
+          <a href="../../../proyectos/P index.html">Proyectos</a>
+          <a href="../../../cv/CV index.html">CV</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="container">
+        <!-- ENCABEZADO Y METADATOS DEL LABORATORIO-->
+        <header class="lab-header">
+          <!-- RELEVANCIA OPERATIVA -->
+          <section></section>
+        </header>
+        <!-- OBJETIVOS -->
+        <section></section>
+        <!-- PREPARACIÓN DEL LABORATORIO -->
+        <section>
+          <h2>Preparación del laboratorio</h2>
+          <p>
+            Las pruebas se realizarán sobre un disco secundario añadido para
+            este laboratorio
+          </p>
+          <h3>Estado inicial de la máquina virtual</h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS
+NAME                       SIZE TYPE FSTYPE      MOUNTPOINTS
+sda                         30G disk
+├─sda1                       1M part
+├─sda2                       2G part ext4        /boot
+└─sda3                      28G part LVM2_member
+  └─ubuntu--vg-ubuntu--lv   14G lvm  ext4        /
+sr0                       1024M rom</code></pre>
+          <h4>Interpretación</h4>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th class="command-column">Dispositivo</th>
+                  <th class="command-column">Tamaño</th>
+                  <th>Tipo</th>
+                  <th>Interpretación</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="command-column"><code>sda</code></td>
+                  <td class="command-column">30 GB</td>
+                  <td><code>disk</code></td>
+                  <td>Disco duro virtual principal.</td>
+                </tr>
+                <tr>
+                  <td class="command-column"><code>sda1</code></td>
+                  <td class="command-column">1 MB</td>
+                  <td><code>part</code></td>
+                  <td>Partición pequeña asociada a metadatos de arranque.</td>
+                </tr>
+                <tr>
+                  <td class="command-column"><code>sda2</code></td>
+                  <td class="command-column">2 GB</td>
+                  <td><code>part</code></td>
+                  <td>
+                    Partición <code>ext4</code> montada en <code>/boot</code>,
+                    con archivos necesarios para el arranque.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="command-column"><code>sda3</code></td>
+                  <td class="command-column">28 GB</td>
+                  <td><code>part</code></td>
+                  <td>Partición que contiene el volumen físico de LVM.</td>
+                </tr>
+                <tr>
+                  <td class="command-column">
+                    <code>ubuntu--vg-ubuntu--lv</code>
+                  </td>
+                  <td class="command-column">14 GB</td>
+                  <td><code>lvm</code></td>
+                  <td>
+                    Volumen lógico con sistema de archivos <code>ext4</code>,
+                    montado en <code>/</code>. Aquí reside el sistema raíz de
+                    Ubuntu.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="command-column"><code>sr0</code></td>
+                  <td class="command-column">1024 MB</td>
+                  <td><code>rom</code></td>
+                  <td>
+                    Dispositivo óptico virtual. Unidad de CD/DVD de VirtualBox.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Entorno de pruebas</h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS
+NAME                       SIZE TYPE FSTYPE      MOUNTPOINTS
+sda                         30G disk
+├─sda1                       1M part
+├─sda2                       2G part ext4        /boot
+└─sda3                      28G part LVM2_member
+  └─ubuntu--vg-ubuntu--lv   14G lvm  ext4        /
+sdb                          5G disk
+sr0                       1024M rom</code></pre>
+          <h4>Interpretación</h4>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th class="command-column">Dispositivo</th>
+                  <th class="command-column">Tamaño</th>
+                  <th>Tipo</th>
+                  <th>Estado actual</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="command-column"><code>sda</code></td>
+                  <td class="command-column">30 GB</td>
+                  <td><code>disk</code></td>
+                  <td>Disco virtual principal. Contiene Ubuntu Server.</td>
+                </tr>
+                <tr>
+                  <td class="command-column"><code>sda1</code></td>
+                  <td class="command-column">1 MB</td>
+                  <td><code>part</code></td>
+                  <td>Partición existente asociada a metadatos de arranque.</td>
+                </tr>
+                <tr>
+                  <td class="command-column"><code>sda2</code></td>
+                  <td class="command-column">2 GB</td>
+                  <td><code>part</code></td>
+                  <td>
+                    Partición <code>ext4</code> montada en <code>/boot</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="command-column"><code>sda3</code></td>
+                  <td class="command-column">28 GB</td>
+                  <td><code>part</code></td>
+                  <td>Partición que contiene el volumen físico de LVM.</td>
+                </tr>
+                <tr>
+                  <td class="command-column">
+                    <code>ubuntu--vg-ubuntu--lv</code>
+                  </td>
+                  <td class="command-column">14 GB</td>
+                  <td><code>lvm</code></td>
+                  <td>
+                    Volumen lógico <code>ext4</code> montado en <code>/</code>.
+                    Contiene el sistema raíz de Ubuntu.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="command-column"><code>sdb</code></td>
+                  <td class="command-column">5 GB</td>
+                  <td><code>disk</code></td>
+                  <td>
+                    <strong
+                      >Disco virtual secundario destinado al laboratorio</strong
+                    >. Sin particiones, sistema de archivos ni punto de montaje.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="command-column"><code>sr0</code></td>
+                  <td class="command-column">1024 MB</td>
+                  <td><code>rom</code></td>
+                  <td>
+                    Dispositivo óptico virtual. Unidad de CD/DVD de VirtualBox.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- EXPERIMENTOS -->
+
+        <!-- RESÚMENES -->
+
+        <!-- CONCLUSIONES -->
+
+        <!-- EVIDENCIAS DE TERMINAL -->
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
+</html>
