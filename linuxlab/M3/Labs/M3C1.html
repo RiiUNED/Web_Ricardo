@@ -197,6 +197,522 @@ sr0                       1024M rom</code></pre>
 
         <!-- EXPERIMENTOS -->
 
+        <!-- EXPERIMENTO 1-->
+        <section>
+          <h2>Experimento 1 - Particionado y tablas de partición</h2>
+          <h3>Hipótesis</h3>
+          <p>
+            Se examina el disco secundario <code>/dev/sdb</code> y se comprueba
+            que no contiene una tabla de particiones reconocida ni particiones
+            existentes. Se creará una tabla GPT que permitirá definir y
+            delimitar una nueva partición sobre su espacio de almacenamiento.
+          </p>
+          <h3>Estado inicial</h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo fdisk -l /dev/sdb
+<strong>Disk /dev/sdb: 5 GiB, 5368709120 bytes, 10485760 sectors</strong>
+Disk model: VBOX HARDDISK
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo fdisk /dev/sdb
+
+<span class="prompt-symbol">Welcome to fdisk (util-linux 2.39.3).</span>
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+Device does not contain a recognized partition table.
+Created a new DOS (MBR) disklabel with disk identifier 0x28656e8a.
+
+Command (m for help): p
+<strong>Disk /dev/sdb: 5 GiB, 5368709120 bytes, 10485760 sectors</strong>
+Disk model: VBOX HARDDISK
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x28656e8a
+
+Command (m for help): q</code></pre>
+          <h4>Interpretación</h4>
+          <p>
+            La inspección inicial confirma que <code>/dev/sdb</code> es un disco
+            virtual de 5 GiB, con sectores de 512 bytes y sin una tabla de
+            particiones reconocida ni particiones existentes.
+          </p>
+          <p>
+            Al acceder al dispositivo mediante <code>fdisk</code>, se genera
+            automáticamente una etiqueta DOS (MBR) en memoria, que aparece
+            identificada como <code>Disklabel type: dos</code>. La consulta
+            mediante <code>p</code> permite comprobar esta estructura, mientras
+            que la salida con <code>q</code> descarta los cambios sin
+            escribirlos en el disco.
+          </p>
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Observación</strong><br />
+              <u>El disco está disponible para iniciar el experimento</u>. La
+              etiqueta MBR mostrada no se ha guardado, por lo que todavía no
+              existe una tabla de particiones persistente en el dispositivo.
+            </p>
+          </div>
+          <h3>Intervención</h3>
+          <h4>1. Identificación del disco y estado inicial</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda                         8:0    0   30G  0 disk
+├─sda1                      8:1    0    1M  0 part
+├─sda2                      8:2    0    2G  0 part /boot
+└─sda3                      8:3    0   28G  0 part
+  └─ubuntu--vg-ubuntu--lv 252:0    0   14G  0 lvm  /
+sdb                         8:16   0    5G  0 disk
+sr0                        11:0    1 1024M  1 rom</code></pre>
+          <h4>2. Creación de la tabla GPT y particionado</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo fdisk /dev/sdb
+
+<span class="prompt-symbol">Welcome to fdisk (util-linux 2.39.3).</span>
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+Device does not contain a recognized partition table.
+Created a new DOS (MBR) disklabel with disk identifier 0xd37284d8.
+
+Command (m for help): g
+Created a new GPT disklabel (GUID: BD28E1ED-4E16-41EA-A5E1-0D6946ACC8B8).
+
+Command (m for help): n
+Partition number (1-128, default 1):
+First sector (2048-10485726, default 2048):
+Last sector, +/-sectors or +/-size{K,M,G,T,P} (2048-10485726, default 10483711):
+
+Created a new partition 1 of type 'Linux filesystem' and of size 5 GiB.
+
+Command (m for help): p
+<strong>Disk /dev/sdb: 5 GiB, 5368709120 bytes, 10485760 sectors</strong>
+Disk model: VBOX HARDDISK
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: BD28E1ED-4E16-41EA-A5E1-0D6946ACC8B8
+
+Device     Start      End  Sectors Size Type
+/dev/sdb1   2048 10483711 10481664   5G Linux filesystem
+
+Command (m for help): w
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.</code></pre>
+          <h4>
+            3. Verificación de la estructura y persistencia de los cambios
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda                         8:0    0   30G  0 disk
+├─sda1                      8:1    0    1M  0 part
+├─sda2                      8:2    0    2G  0 part /boot
+└─sda3                      8:3    0   28G  0 part
+  └─ubuntu--vg-ubuntu--lv 252:0    0   14G  0 lvm  /
+sdb                         8:16   0    5G  0 disk
+└─sdb1                      8:17   0    5G  0 part
+sr0                        11:0    1 1024M  1 rom
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo fdisk -l /dev/sdb
+<strong>Disk /dev/sdb: 5 GiB, 5368709120 bytes, 10485760 sectors</strong>
+Disk model: VBOX HARDDISK
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: BD28E1ED-4E16-41EA-A5E1-0D6946ACC8B8
+
+<strong>Device     Start      End  Sectors Size Type</strong>
+/dev/sdb1   2048 10483711 10481664   5G Linux filesystem</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            La identificación inicial confirma que <code>/dev/sdb</code> es un
+            disco secundario de 5 GiB, sin particiones existentes. Se distingue
+            del disco principal <code>/dev/sda</code>, que contiene el sistema
+            operativo y sus volúmenes.
+          </p>
+
+          <p>
+            Mediante <code>fdisk</code> se crea una nueva tabla de particiones
+            GPT y se define una partición, <code>/dev/sdb1</code>, desde el
+            sector 2048 hasta el 10483711. Al aceptar los valores
+            predeterminados, la partición ocupa prácticamente todo el espacio
+            utilizable del disco. El comando <code>w</code> escribe los cambios
+            en el dispositivo.
+          </p>
+
+          <p>
+            La verificación posterior con <code>lsblk</code> confirma que el
+            kernel reconoce <code>/dev/sdb1</code> como partición de 5 GiB y le
+            asigna el identificador <code>8:17</code> (major:minor). Por su
+            parte, <code>fdisk -l</code> confirma que la tabla GPT y sus límites
+            están registrados en el disco.
+          </p>
+
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Conclusión</strong><br />
+              El disco secundario dispone ahora de una tabla GPT persistente y
+              una partición que ocupa todo su espacio utilizable.
+              <u
+                >La partición todavía no contiene un sistema de archivos ni está
+                montada</u
+              >.
+            </p>
+          </div>
+        </section>
+
+        <!-- EXPERIMENTO 2-->
+        <section>
+          <h2>
+            Experimento 2 - Creación de sistemas de archivos e inspección de
+            inodos
+          </h2>
+          <h3>Hipótesis</h3>
+          <p>
+            Se creará un sistema de archivos ext4 sobre la partición
+            <code>/dev/sdb1</code>. La operación inicializará sus estructuras de
+            metadatos, incluida la tabla de inodos, que permitirá registrar los
+            atributos y las referencias a los bloques de datos de los archivos.
+          </p>
+          <h3>Intervención</h3>
+          <h4>1. Creación del sistema de archivos <code>ext4</code></h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo mkfs.ext4 /dev/sdb1
+mke2fs 1.47.0 (5-Feb-2023)
+Creating filesystem with 1310208 4k blocks and 327680 inodes
+Filesystem UUID: 7bad2828-9400-4150-b2c6-37e5883b96ac
+Superblock backups stored on blocks:
+        32768, 98304, 163840, 229376, 294912, 819200, 884736
+
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (16384 blocks): done
+Writing superblocks and filesystem accounting information: done</code></pre>
+          <h4>
+            2. Consulta de los parámetros y los metadatos del sistema de
+            archivos
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo tune2fs -l /dev/sdb1
+tune2fs 1.47.0 (5-Feb-2023)
+Filesystem volume name:   &lt;none&gt;
+Last mounted on:          &lt;not available&gt;
+Filesystem UUID:          7bad2828-9400-4150-b2c6-37e5883b96ac
+Filesystem magic number:  0xEF53
+Filesystem revision #:    1 (dynamic)
+Filesystem features:      has_journal ext_attr resize_inode dir_index filetype extent 64bit flex_bg sparse_super large_file huge_file dir_nlink extra_isize metadata_csum
+Filesystem flags:         signed_directory_hash
+Default mount options:    user_xattr acl
+Filesystem state:         clean
+Errors behavior:          Continue
+Filesystem OS type:       Linux
+Inode count:              327680
+Block count:              1310208
+Reserved block count:     65510
+Overhead clusters:        42072
+Free blocks:              1268130
+Free inodes:              327669
+First block:              0
+Block size:               4096
+Fragment size:            4096
+Group descriptor size:    64
+Reserved GDT blocks:      639
+Blocks per group:         32768
+Fragments per group:      32768
+Inodes per group:         8192
+Inode blocks per group:   512
+Flex block group size:    16
+Filesystem created:       Sat Nov  7 10:26:18 2026
+Last mount time:          n/a
+Last write time:          Sat Nov  7 10:26:18 2026
+Mount count:              0
+Maximum mount count:      -1
+Last checked:             Sat Nov  7 10:26:18 2026
+Check interval:           0 (&lt;none&gt;)
+Lifetime writes:          2589 kB
+Reserved blocks uid:      0 (user root)
+Reserved blocks gid:      0 (group root)
+First inode:              11
+Inode size:               256
+Required extra isize:     32
+Desired extra isize:      32
+Journal inode:            8
+Default directory hash:   half_md4
+Directory Hash Seed:      3956eacc-afa7-4058-940a-dcaff8f4d0aa
+Journal backup:           inode blocks
+Checksum type:            crc32c
+Checksum:                 0xe6ec2199</code></pre>
+          <h3>Resultado observado</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Salida</th>
+                  <th>Parámetro</th>
+                  <th>Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Block size: 4096</code></td>
+                  <td>Tamaño de bloque</td>
+                  <td>4096 bytes (4 KiB)</td>
+                </tr>
+                <tr>
+                  <td><code>Block count: 1310208</code></td>
+                  <td>Número total de bloques</td>
+                  <td>1.310.208</td>
+                </tr>
+                <tr>
+                  <td><code>Inode count: 327680</code></td>
+                  <td>Número total de inodos</td>
+                  <td>327.680</td>
+                </tr>
+                <tr>
+                  <td><code>Free inodes: 327669</code></td>
+                  <td>Inodos libres</td>
+                  <td>327.669</td>
+                </tr>
+                <tr>
+                  <td><code>Inode size: 256</code></td>
+                  <td>Tamaño de cada inodo</td>
+                  <td>256 bytes</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code
+                      >Filesystem UUID:
+                      7bad2828-9400-4150-b2c6-37e5883b96ac</code
+                    >
+                  </td>
+                  <td>UUID</td>
+                  <td><code>7bad2828-9400-4150-b2c6-37e5883b96ac</code></td>
+                </tr>
+                <tr>
+                  <td><code>Filesystem state: clean</code></td>
+                  <td>Estado</td>
+                  <td>clean</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Interpretación</h3>
+          <p>
+            La creación del sistema de archivos <code>ext4</code> finaliza
+            correctamente. La salida de <code>mkfs.ext4</code> confirma la
+            inicialización de las tablas de inodos, el diario (<em>journal</em>)
+            y las estructuras de metadatos.
+          </p>
+          <p>
+            La consulta mediante <code>tune2fs -l</code> permite identificar los
+            parámetros principales del sistema de archivos. Se comprueba que
+            utiliza bloques de 4 KiB y dispone de 327.680 inodos, de los cuales
+            327.669 están libres tras su creación. Los 11 restantes corresponden
+            a inodos asignados durante la inicialización del sistema de
+            archivos.
+          </p>
+          <p>
+            El UUID generado identifica el sistema de archivos
+            independientemente del nombre del dispositivo o de la partición. Por
+            último, el estado <code>clean</code> indica que el sistema de
+            archivos se encuentra en estado limpio.
+          </p>
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Conclusión</strong><br />
+              La partición <code>/dev/sdb1</code> contiene un sistema de
+              archivos <code>ext4</code> correctamente inicializado, con sus
+              estructuras de metadatos e inodos preparadas para almacenar
+              archivos.
+              <u
+                >Todavía no está montado ni contiene archivos creados por el
+                usuario</u
+              >.
+            </p>
+          </div>
+        </section>
+
+        <!-- EXPERIMENTO 3-->
+        <section>
+          <h2>Experimento 3 - Montaje manual y validación del VFS</h2>
+          <h3>Hipótesis</h3>
+          <p>
+            Al montar manualmente el sistema de archivos <code>ext4</code> de
+            <code>/dev/sdb1</code> en un punto de montaje, su contenido quedará
+            integrado en el árbol de directorios global de Linux y será
+            accesible mediante la interfaz común del VFS, sin necesidad de
+            acceder directamente al dispositivo de bloques.
+          </p>
+          <h3>Intervención</h3>
+          <h4>1. Creación del punto de montaje</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo ls /mnt/
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo mkdir -p /mnt/m3data
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo ls /mnt/
+m3data</code></pre>
+          <h4>2. Montaje de la partición en el directorio creado</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo mount /dev/sdb1 /mnt/m3data/</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -Th /mnt/m3data/
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/sdb1      ext4  4.9G   24K  4.6G   1% /mnt/m3data</code></pre>
+          <h4>3. Prueba y validación del montaje</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo touch /mnt/m3data/m3c1.txt
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> stat /mnt/m3data/m3c1.txt
+  File: /mnt/m3data/m3c1.txt
+  Size: 0               Blocks: 0          IO Block: 4096   regular empty file
+Device: 8,17    Inode: 12          Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2026-11-07 12:03:34.688804526 +0000
+Modify: 2026-11-07 12:03:34.688804526 +0000
+Change: 2026-11-07 12:03:34.688804526 +0000
+ Birth: 2026-11-07 12:03:34.688804526 +0000</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            Se crea el directorio <code>/mnt/m3data</code> para utilizarlo como
+            punto de montaje. A continuación, se monta la partición
+            <code>/dev/sdb1</code> y se comprueba mediante
+            <code>df -Th</code> que el sistema de archivos ext4 está integrado
+            en dicha ruta y dispone de espacio libre.
+          </p>
+
+          <p>
+            Para validar el acceso, se crea el archivo
+            <code>m3c1.txt</code> dentro del directorio. La consulta mediante
+            <code>stat</code> muestra sus metadatos, incluyendo el dispositivo
+            asociado <code>8,17</code> (major,minor), el número de inodo
+            <code>12</code>, los permisos, propietario y grupo.
+          </p>
+
+          <p>
+            La asignación de un inodo confirma que el archivo ha sido registrado
+            en las estructuras internas del sistema de archivos
+            <code>ext4</code>. Su acceso mediante una ruta del árbol de
+            directorios demuestra la integración del sistema de archivos a
+            través de la interfaz VFS.
+          </p>
+
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Conclusión</strong><br />
+              El montaje se ha realizado correctamente. El sistema de archivos
+              ext4 de
+              <code>/dev/sdb1</code> está accesible desde
+              <code>/mnt/m3data</code> y permite crear y consultar archivos
+              mediante las operaciones habituales del sistema de archivos.
+            </p>
+          </div>
+        </section>
+
+        <!-- EXPERIMENTO 4-->
+        <section>
+          <h2>
+            Experimento 4 - Persistencia mediante <code>/etc/fstab</code> y uso
+            de UUID
+          </h2>
+          <h3>Hipótesis</h3>
+          <p>
+            Si se configura el montaje en <code>/etc/fstab</code> mediante el
+            UUID del sistema en lugar de la nomenclatura de dispositivo
+            <code>/dev/sdb1</code>, el montaje seguirá identificando
+            correctamente el sistema de archivos aunque cambie el orden de
+            detección de los dispositivos durante reinicios posteriores.
+          </p>
+          <h3>Intervención</h3>
+          <h4>
+            1. Identificación del sistema de archivos
+            <code>/dev/sdb1</code> mediante UUID
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo blkid -s UUID -o value /dev/sdb1
+7bad2828-9400-4150-b2c6-37e5883b96ac</code></pre>
+          <h4>
+            2. Copia de seguridad del archivo de configuración actual
+            <code>/etc/fstab</code>
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo cp /etc/fstab /etc/fstab.bak</code></pre>
+          <h4>3. Nueva configuración de <code>/etc/fstab</code></h4>
+          <code
+            >UUID=7bad2828-9400-4150-b2c6-37e5883b96ac /mnt/m3data ext4
+            defaults,noatime 0 2</code
+          >
+          <p>
+            Línea añadida al final del archivo de configuración
+            <code>/etc/fstab</code>
+          </p>
+          <h4>4. Validación de la nueva configuración</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo findmnt --verify
+none
+   [W] non-bind mount source /swap.img is a directory or regular file
+   [W] your fstab has been modified, but systemd still uses the old version;
+       use 'systemctl daemon-reload' to reload
+
+0 parse errors, 0 errors, 2 warnings
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo mount -a
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> findmnt /mnt/m3data
+TARGET      SOURCE    FSTYPE OPTIONS
+/mnt/m3data /dev/sdb1 ext4   rw,relatime</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo systemctl daemon-reload
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo mount -o remount /mnt/m3data
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> findmnt /mnt/m3data
+TARGET      SOURCE    FSTYPE OPTIONS
+/mnt/m3data /dev/sdb1 ext4   rw,noatime</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo reboot
+
+Broadcast message from root@ubuntu-lab on pts/1 (Sat 2026-11-07 13:14:54 UTC):
+
+The system will reboot now!
+
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> findmnt /mnt/m3data
+TARGET      SOURCE    FSTYPE OPTIONS
+/mnt/m3data /dev/sdb1 ext4   rw,noatime</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            Se identifica el sistema de archivos de
+            <code>/dev/sdb1</code> mediante su UUID y se realiza una copia de
+            seguridad del archivo <code>/etc/fstab</code> antes de modificarlo.
+          </p>
+
+          <p>
+            Se añade una entrada que asocia el UUID con el punto de montaje
+            <code>/mnt/m3data</code>, especificando el tipo de sistema de
+            archivos <code>ext4</code> y las opciones de montaje
+            <code>defaults,noatime</code>.
+          </p>
+
+          <p>
+            La validación inicial mediante <code>findmnt --verify</code> no
+            detecta errores de sintaxis ni de configuración, aunque muestra dos
+            advertencias: una relativa al archivo de intercambio
+            <code>/swap.img</code> y otra indicando que systemd todavía no ha
+            recargado la configuración modificada.<br />Por su parte,
+            <code>mount -a</code> ejecuta el montaje sin errores.
+          </p>
+
+          <p>
+            Tras recargar la configuración de systemd y remontar el sistema de
+            archivos, <code>findmnt</code> muestra las opciones
+            <code>rw,noatime</code>, confirmando que se han aplicado las
+            opciones definidas en <code>/etc/fstab</code>.
+          </p>
+
+          <p>
+            Finalmente, se reinicia la máquina virtual y se comprueba que
+            <code>/mnt/m3data</code> vuelve a estar montado automáticamente,
+            conservando el dispositivo, el tipo de sistema de archivos y las
+            opciones configuradas.
+          </p>
+
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Conclusión</strong><br />
+              El montaje persistente mediante UUID funciona correctamente. El
+              sistema identifica el sistema de archivos independientemente de la
+              nomenclatura del dispositivo y recupera automáticamente el montaje
+              durante el arranque, aplicando las opciones especificadas en
+              <code>/etc/fstab</code>.
+            </p>
+          </div>
+        </section>
+
         <!-- RESÚMENES -->
 
         <!-- CONCLUSIONES -->

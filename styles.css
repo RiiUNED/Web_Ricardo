@@ -195,6 +195,11 @@ pre code {
   border: none;
 }
 
+pre code strong {
+  color: #F1F5F9;
+  font-weight: 700;
+}
+
 /* Elementos de identidad y acento en Cian */
 .prompt-symbol {
   color: var(--brand-primary);
