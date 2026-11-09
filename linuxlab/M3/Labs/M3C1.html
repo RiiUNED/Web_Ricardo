@@ -137,7 +137,7 @@
           <h2>Preparación del laboratorio</h2>
           <p>
             Las pruebas se realizarán sobre un disco secundario añadido para
-            este laboratorio
+            este laboratorio.
           </p>
           <h3>Estado inicial de la máquina virtual</h3>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS
@@ -162,19 +162,22 @@ sr0                       1024M rom</code></pre>
               <tbody>
                 <tr>
                   <td class="command-column"><code>sda</code></td>
-                  <td class="command-column">30 GB</td>
+                  <td class="command-column">30 GiB</td>
                   <td><code>disk</code></td>
                   <td>Disco duro virtual principal.</td>
                 </tr>
                 <tr>
                   <td class="command-column"><code>sda1</code></td>
-                  <td class="command-column">1 MB</td>
+                  <td class="command-column">1 MiB</td>
                   <td><code>part</code></td>
-                  <td>Partición pequeña asociada a metadatos de arranque.</td>
+                  <td>
+                    Partición de 1 MiB sin sistema de archivos ni punto de
+                    montaje identificado.
+                  </td>
                 </tr>
                 <tr>
                   <td class="command-column"><code>sda2</code></td>
-                  <td class="command-column">2 GB</td>
+                  <td class="command-column">2 GiB</td>
                   <td><code>part</code></td>
                   <td>
                     Partición <code>ext4</code> montada en <code>/boot</code>,
@@ -183,7 +186,7 @@ sr0                       1024M rom</code></pre>
                 </tr>
                 <tr>
                   <td class="command-column"><code>sda3</code></td>
-                  <td class="command-column">28 GB</td>
+                  <td class="command-column">28 GiB</td>
                   <td><code>part</code></td>
                   <td>Partición que contiene el volumen físico de LVM.</td>
                 </tr>
@@ -191,7 +194,7 @@ sr0                       1024M rom</code></pre>
                   <td class="command-column">
                     <code>ubuntu--vg-ubuntu--lv</code>
                   </td>
-                  <td class="command-column">14 GB</td>
+                  <td class="command-column">14 GiB</td>
                   <td><code>lvm</code></td>
                   <td>
                     Volumen lógico con sistema de archivos <code>ext4</code>,
@@ -201,7 +204,7 @@ sr0                       1024M rom</code></pre>
                 </tr>
                 <tr>
                   <td class="command-column"><code>sr0</code></td>
-                  <td class="command-column">1024 MB</td>
+                  <td class="command-column">1024 MiB</td>
                   <td><code>rom</code></td>
                   <td>
                     Dispositivo óptico virtual. Unidad de CD/DVD de VirtualBox.
@@ -234,19 +237,22 @@ sr0                       1024M rom</code></pre>
               <tbody>
                 <tr>
                   <td class="command-column"><code>sda</code></td>
-                  <td class="command-column">30 GB</td>
+                  <td class="command-column">30 GiB</td>
                   <td><code>disk</code></td>
                   <td>Disco virtual principal. Contiene Ubuntu Server.</td>
                 </tr>
                 <tr>
                   <td class="command-column"><code>sda1</code></td>
-                  <td class="command-column">1 MB</td>
+                  <td class="command-column">1 MiB</td>
                   <td><code>part</code></td>
-                  <td>Partición existente asociada a metadatos de arranque.</td>
+                  <td>
+                    Partición de 1 MiB sin sistema de archivos ni punto de
+                    montaje identificado.
+                  </td>
                 </tr>
                 <tr>
                   <td class="command-column"><code>sda2</code></td>
-                  <td class="command-column">2 GB</td>
+                  <td class="command-column">2 GiB</td>
                   <td><code>part</code></td>
                   <td>
                     Partición <code>ext4</code> montada en <code>/boot</code>.
@@ -254,7 +260,7 @@ sr0                       1024M rom</code></pre>
                 </tr>
                 <tr>
                   <td class="command-column"><code>sda3</code></td>
-                  <td class="command-column">28 GB</td>
+                  <td class="command-column">28 GiB</td>
                   <td><code>part</code></td>
                   <td>Partición que contiene el volumen físico de LVM.</td>
                 </tr>
@@ -262,7 +268,7 @@ sr0                       1024M rom</code></pre>
                   <td class="command-column">
                     <code>ubuntu--vg-ubuntu--lv</code>
                   </td>
-                  <td class="command-column">14 GB</td>
+                  <td class="command-column">14 GiB</td>
                   <td><code>lvm</code></td>
                   <td>
                     Volumen lógico <code>ext4</code> montado en <code>/</code>.
@@ -271,7 +277,7 @@ sr0                       1024M rom</code></pre>
                 </tr>
                 <tr>
                   <td class="command-column"><code>sdb</code></td>
-                  <td class="command-column">5 GB</td>
+                  <td class="command-column">5 GiB</td>
                   <td><code>disk</code></td>
                   <td>
                     <strong
@@ -281,7 +287,7 @@ sr0                       1024M rom</code></pre>
                 </tr>
                 <tr>
                   <td class="command-column"><code>sr0</code></td>
-                  <td class="command-column">1024 MB</td>
+                  <td class="command-column">1024 MiB</td>
                   <td><code>rom</code></td>
                   <td>
                     Dispositivo óptico virtual. Unidad de CD/DVD de VirtualBox.
@@ -297,7 +303,7 @@ sr0                       1024M rom</code></pre>
         <!-- EXPERIMENTO 1-->
         <section>
           <h2>Experimento 1 - Particionado y tablas de partición</h2>
-          <h3>Hipótesis</h3>
+          <h3>Objetivo</h3>
           <p>
             Se examina el disco secundario <code>/dev/sdb</code> y se comprueba
             que no contiene una tabla de particiones reconocida ni particiones
@@ -800,14 +806,24 @@ TARGET      SOURCE    FSTYPE OPTIONS
 
           <div class="card" style="margin-top: 1.5rem">
             <p>
-              <strong>Conclusión</strong><br />
-              El montaje persistente mediante UUID funciona correctamente. El
-              sistema identifica el sistema de archivos independientemente de la
-              nomenclatura del dispositivo y recupera automáticamente el montaje
-              durante el arranque, aplicando las opciones especificadas en
-              <code>/etc/fstab</code>.
+              <strong>Resumen</strong><br />
+              El montaje mediante UUID permite identificar el sistema de
+              archivos y recuperar automáticamente su punto de montaje tras
+              reiniciar la máquina virtual. La configuración conserva las
+              opciones establecidas en <code>/etc/fstab</code>, incluida la
+              opción <code>noatime</code>.
             </p>
           </div>
+          <h3>Conclusión</h3>
+          <p>
+            <strong>La hipótesis queda parcialmente verificada</strong>.<br />
+            Se comprueba que el sistema de archivos se identifica mediante su
+            UUID y que el montaje se recupera automáticamente tras reiniciar la
+            máquina virtual, conservando las opciones configuradas. Sin embargo,
+            no se modifica el orden de detección de los dispositivos, por lo que
+            no se verifica experimentalmente el comportamiento previsto ante ese
+            supuesto.
+          </p>
         </section>
 
         <!-- RESUMEN DEL PROCESO DE INCORPORACIÓN DE ALMACENAMIENTO -->
@@ -909,8 +925,8 @@ TARGET      SOURCE    FSTYPE OPTIONS
               </strong>
               La creación de una tabla GPT y de la partición
               <code>/dev/sdb1</code> permite delimitar la región del disco que
-              se utilizará para almacenar datos, diferenciando el dispositivo
-              físico de las particiones que contiene.
+              se utilizará para almacenar datos, diferenciando el dispositivo de
+              bloques correspondiente al disco de las particiones que contiene.
             </li>
             <li>
               <strong>
@@ -996,7 +1012,7 @@ Disk identifier: BD28E1ED-4E16-41EA-A5E1-0D6946ACC8B8
 <strong>Device     Start      End  Sectors Size Type</strong>
 /dev/sdb1   2048 10483711 10481664   5G Linux filesystem</code></pre>
           <h3>Creación e inspección del sistema de archivos</h3>
-<pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo mkfs.ext4 /dev/sdb1
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo mkfs.ext4 /dev/sdb1
 mke2fs 1.47.0 (5-Feb-2023)
 Creating filesystem with 1310208 4k blocks and 327680 inodes
 Filesystem UUID: 7bad2828-9400-4150-b2c6-37e5883b96ac
@@ -1007,7 +1023,7 @@ Allocating group tables: done
 Writing inode tables: done
 Creating journal (16384 blocks): done
 Writing superblocks and filesystem accounting information: done</code></pre>
-<pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo tune2fs -l /dev/sdb1
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo tune2fs -l /dev/sdb1
 tune2fs 1.47.0 (5-Feb-2023)
 Filesystem volume name:   &lt;none&gt;
 Last mounted on:          &lt;not available&gt;
@@ -1055,7 +1071,7 @@ Default directory hash:   half_md4
 Directory Hash Seed:      3956eacc-afa7-4058-940a-dcaff8f4d0aa
 Journal backup:           inode blocks
 Checksum type:            crc32c
-Checksum:                 0xe6ec2199</code></pre>          
+Checksum:                 0xe6ec2199</code></pre>
           <h3>Montaje persistente después de reinicio</h3>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo reboot
 
