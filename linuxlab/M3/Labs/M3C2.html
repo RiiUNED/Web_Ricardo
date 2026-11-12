@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Linux Lab | M3C1 Almacenamiento tradicional y VFS</title>
+    <title>Linux Lab | M3C2 LVM</title>
     <!-- Icono para la pestaña del navegador (Favicon) -->
     <link rel="icon" type="image/png" href="../../../img/Logo.png" />
     <!-- Hoja de estilos compartida -->
@@ -581,17 +581,206 @@ Filesystem                  Type  Size  Used Avail Use% Mounted on
           </p>
         </section>
 
-        <!-- RESUMEN DEL PROCESO DE INCORPORACIÓN DE ALMACENAMIENTO -->
-        <section></section>
+        <!-- RESUMEN DEL PROCESO DE GESTIÓN DEL ALMACENAMIENTO MEDIANTE LVM -->
+        <section>
+          <h2>
+            Resumen del proceso de gestión del almacenamiento mediante LVM
+          </h2>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Herramienta / Elemento</th>
+                  <th>Función</th>
+                  <th>Resultado o evidencia obtenida</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>pvcreate</code></td>
+                  <td>
+                    Inicialización de dispositivos o particiones como volúmenes
+                    físicos (PV) gestionados por LVM.
+                  </td>
+                  <td>
+                    Creación de los volúmenes físicos <code>/dev/sdb1</code> y
+                    <code>/dev/sdc</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>vgcreate</code> / <code>vgextend</code></td>
+                  <td>
+                    Creación de grupos de volúmenes (VG) y ampliación de su
+                    capacidad mediante la incorporación de nuevos PV.
+                  </td>
+                  <td>
+                    Creación de <code>vg_lab</code> con <code>/dev/sdb1</code> e
+                    incorporación posterior de <code>/dev/sdc</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>pvs</code> / <code>vgs</code> / <code>vgdisplay</code>
+                  </td>
+                  <td>
+                    Inspección de los volúmenes físicos y grupos de volúmenes,
+                    incluyendo capacidad total, espacio libre y extensiones
+                    disponibles.
+                  </td>
+                  <td>
+                    Verificación de los PV asociados a <code>vg_lab</code>, su
+                    capacidad y la disponibilidad de espacio para crear o
+                    ampliar volúmenes lógicos.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>lvcreate</code> / <code>mkfs.ext4</code></td>
+                  <td>
+                    Creación de volúmenes lógicos (LV) y preparación de los
+                    mismos mediante un sistema de archivos.
+                  </td>
+                  <td>
+                    Creación de <code>lv_datos</code> con 1 GiB y formateo con
+                    <code>ext4</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>lvs</code> / <code>lvdisplay</code></td>
+                  <td>
+                    Inspección de los volúmenes lógicos, su tamaño, estado,
+                    grupo de volúmenes y distribución sobre los dispositivos
+                    físicos.
+                  </td>
+                  <td>
+                    Verificación de <code>lv_datos</code>, su estado activo,
+                    tamaño y dispositivo físico de soporte.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>mount</code> / <code>df</code></td>
+                  <td>
+                    Montaje del sistema de archivos y consulta de su capacidad y
+                    espacio disponible.
+                  </td>
+                  <td>
+                    Montaje de <code>lv_datos</code> en <code>/mnt/m3data</code>
+                    y comprobación de su capacidad inicial de 1 GiB.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>lvextend -r</code></td>
+                  <td>
+                    Ampliación del volumen lógico y redimensionamiento
+                    simultáneo del sistema de archivos.
+                  </td>
+                  <td>
+                    Incorporación de 1,5 GiB adicionales a
+                    <code>lv_datos</code>, que pasa de 1 GiB a 2,5 GiB,
+                    manteniendo <code>ext4</code> montado durante la operación.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         <!-- CONCLUSIONES GENERALES -->
         <section>
           <h2>Conclusiones</h2>
+          <ul class="custom-list">
+            <li>
+              <strong>
+                LVM permite abstraer el almacenamiento físico y agrupar la
+                capacidad de distintos dispositivos.
+              </strong>
+              La inicialización de <code>/dev/sdb1</code> y
+              <code>/dev/sdc</code>
+              como volúmenes físicos (PV) y su incorporación a
+              <code>vg_lab</code> permite gestionar ambos dispositivos como un
+              conjunto de almacenamiento común, sin depender de la estructura
+              individual de cada disco.
+            </li>
+            <li>
+              <strong>
+                Los volúmenes lógicos proporcionan una capa flexible de
+                asignación del almacenamiento.
+              </strong>
+              La creación de <code>lv_datos</code> demuestra cómo LVM reserva
+              extensiones físicas (PE) dentro del grupo de volúmenes y las
+              asigna al volumen lógico mediante extensiones lógicas (LE). El
+              sistema operativo accede al volumen a través de un dispositivo de
+              bloques, independientemente de la distribución física subyacente.
+            </li>
+            <li>
+              <strong>
+                La capacidad de un grupo de volúmenes puede ampliarse
+                incorporando nuevos dispositivos físicos.
+              </strong>
+              La operación <code>vgextend</code> permite añadir
+              <code>/dev/sdc</code> a <code>vg_lab</code>, aumentando el espacio
+              disponible para crear nuevos volúmenes lógicos o ampliar los
+              existentes.
+            </li>
+            <li>
+              <strong>
+                LVM permite ampliar volúmenes lógicos sin desmontar sus sistemas
+                de archivos.
+              </strong>
+              La ejecución de <code>lvextend -r</code> amplía
+              <code>lv_datos</code> de 1 GiB a 2,5 GiB y coordina el
+              redimensionamiento en línea de <code>ext4</code> mediante
+              <code>resize2fs</code>. La comprobación con
+              <code>df</code> confirma el aumento de capacidad mientras el
+              sistema de archivos permanece montado y accesible.
+            </li>
+          </ul>
+
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Resumen</strong><br />
+              El laboratorio demuestra cómo LVM permite construir y administrar
+              almacenamiento flexible en Linux, agrupando dispositivos físicos y
+              asignando su capacidad a volúmenes lógicos. La ampliación en
+              caliente de <code>lv_datos</code> y de su sistema de archivos
+              <code>ext4</code> evidencia la posibilidad de responder a
+              necesidades de capacidad adicionales sin desmontar el
+              almacenamiento ni interrumpir su acceso.
+            </p>
+          </div>
         </section>
 
         <!-- EVIDENCIAS DE TERMINAL -->
         <section>
           <h2>Evidencias de terminal</h2>
+          <h3>Inspección del grupo de volúmenes</h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo pvs
+  PV         VG        Fmt  Attr PSize   PFree
+  /dev/sda3  ubuntu-vg lvm2 a--  &lt;28.00g 14.00g
+  /dev/sdb1  vg_lab    lvm2 a--   &lt;5.00g &lt;5.00g</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo vgs
+  VG        #PV #LV #SN Attr   VSize   VFree
+  ubuntu-vg   1   1   0 wz--n- &lt;28.00g 14.00g
+  vg_lab      1   0   0 wz--n-  &lt;5.00g &lt;5.00g</code></pre>
+          <h3>Creación y montaje del volumen lógico</h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lvs -o lv_name,vg_name,lv_size,lv_attr,devices
+  LV        VG        LSize   Attr       Devices
+  ubuntu-lv ubuntu-vg &lt;14.00g -wi-ao---- /dev/sda3(0)
+  lv_datos  vg_lab      1.00g -wi-ao---- /dev/sdb1(0)</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> findmnt /mnt/m3data
+TARGET      SOURCE                      FSTYPE OPTIONS
+/mnt/m3data /dev/mapper/vg_lab-lv_datos ext4   rw,relatime</code></pre>
+          <h3>Ampliación en caliente del volumen lógico</h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lvextend -r -L +1.5G /dev/vg_lab/lv_datos
+  Size of logical volume vg_lab/lv_datos changed from 1.00 GiB (256 extents) to 2.50 GiB (640 extents).
+  Logical volume vg_lab/lv_datos successfully resized.
+resize2fs 1.47.0 (5-Feb-2023)
+Filesystem at /dev/mapper/vg_lab-lv_datos is mounted on /mnt/m3data; on-line resizing required
+old_desc_blocks = 1, new_desc_blocks = 1
+The filesystem on /dev/mapper/vg_lab-lv_datos is now 655360 (4k) blocks long.</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -Th /mnt/m3data/
+Filesystem                  Type  Size  Used Avail Use% Mounted on
+/dev/mapper/vg_lab-lv_datos ext4  2.5G   24K  2.4G   1% /mnt/m3data</code></pre>
         </section>
       </div>
     </main>
