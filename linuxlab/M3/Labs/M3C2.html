@@ -31,10 +31,97 @@
         <!-- ENCABEZADO Y METADATOS DEL LABORATORIO-->
         <header class="lab-header">
           <h1>Laboratorio M3C2 &#45; Gestión de volúmenes lógicos con LVM</h1>
+          <p class="lead-text">
+            Investigación experimental de volúmenes físicos, grupos de
+            volúmenes, volúmenes lógicos y ampliación dinámica de capacidad en
+            Linux.
+          </p>
+          <!-- RELEVANCIA OPERATIVA -->
+          <section>
+            <div class="callout-box">
+              <span class="tag">lvm</span>
+              <span class="tag">physical-volumes</span>
+              <span class="tag">volume-groups</span>
+              <span class="tag">logical-volumes</span>
+              <span class="tag">ext4</span>
+              <span class="tag">online-resizing</span>
+
+              <h3>&gt;_ Relevancia Operativa</h3>
+              <p>
+                Este laboratorio investiga la gestión flexible del
+                almacenamiento mediante LVM, desde la inicialización de
+                volúmenes físicos (PV) y la creación de grupos de volúmenes (VG)
+                hasta la configuración de volúmenes lógicos (LV) con sistemas de
+                archivos <code>ext4</code>.
+              </p>
+              <p style="margin-top: 0.75rem">
+                Los experimentos permiten comprobar cómo LVM agrupa la capacidad
+                de distintos dispositivos físicos y la asigna a volúmenes
+                lógicos mediante extensiones (extents), independizando su
+                gestión de la estructura individual de los discos.
+              </p>
+              <p style="margin-top: 0.75rem">
+                Se reproduce una ampliación de almacenamiento en caliente
+                mediante la incorporación de un nuevo disco y la extensión de un
+                volumen lógico existente. Se comprueba el redimensionamiento
+                simultáneo de <code>ext4</code> con el sistema de archivos
+                montado y accesible, sin necesidad de interrumpir su uso.
+              </p>
+            </div>
+          </section>
         </header>
         <!-- OBJETIVOS -->
         <section>
           <h2>Objetivos</h2>
+          <p>
+            El laboratorio investigará la gestión del almacenamiento mediante
+            LVM, desde la incorporación de dispositivos físicos hasta la
+            creación y ampliación de volúmenes lógicos con sistemas de archivos
+            accesibles desde Linux.
+          </p>
+
+          <ul class="custom-list">
+            <li>
+              <strong
+                >1. Inicialización de volúmenes físicos y grupos de
+                volúmenes.</strong
+              >
+              Preparar dispositivos de almacenamiento como volúmenes físicos
+              (PV) mediante <code>pvcreate</code> y agrupar su capacidad en un
+              grupo de volúmenes (VG) mediante <code>vgcreate</code> y
+              <code>vgextend</code>.
+            </li>
+            <li>
+              <strong
+                >2. Creación de volúmenes lógicos y sistemas de
+                archivos.</strong
+              >
+              Instanciar un volumen lógico (LV) de tamaño específico mediante
+              <code>lvcreate</code>, formatearlo con <code>ext4</code> y
+              montarlo en el árbol de directorios de Linux. Inspeccionar su
+              configuración y relacionar las rutas de dispositivo de LVM con los
+              dispositivos de bloques gestionados por el kernel.
+            </li>
+            <li>
+              <strong>3. Ampliación dinámica del almacenamiento.</strong>
+              Incorporar un nuevo dispositivo físico a un grupo de volúmenes
+              existente y ampliar un volumen lógico mediante
+              <code>lvextend</code>. Redimensionar simultáneamente el sistema de
+              archivos <code>ext4</code> con la opción <code>-r</code>,
+              comprobando que la operación puede realizarse en caliente, sin
+              desmontar el volumen.
+            </li>
+          </ul>
+
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Resultado esperado</strong><br />
+              Un entorno de almacenamiento gestionado mediante LVM, con
+              capacidad para integrar nuevos discos, crear volúmenes lógicos y
+              ampliar el espacio disponible de un sistema de archivos
+              <code>ext4</code> sin interrumpir su montaje y acceso.
+            </p>
+          </div>
         </section>
         <!-- PREPARACIÓN DEL LABORATORIO -->
         <section>
