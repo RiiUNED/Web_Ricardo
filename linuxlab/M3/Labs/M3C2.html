@@ -63,9 +63,9 @@
               <p style="margin-top: 0.75rem">
                 Se reproduce una ampliación de almacenamiento en caliente
                 mediante la incorporación de un nuevo disco y la extensión de un
-                volumen lógico existente. Se comprueba el redimensionamiento
-                simultáneo de <code>ext4</code> con el sistema de archivos
-                montado y accesible, sin necesidad de interrumpir su uso.
+                volumen lógico existente. Se comprueba el redimensionamiento en
+                línea del sistema de archivos <code>ext4</code>, sin necesidad
+                de desmontarlo.
               </p>
             </div>
           </section>
@@ -119,7 +119,8 @@
               Un entorno de almacenamiento gestionado mediante LVM, con
               capacidad para integrar nuevos discos, crear volúmenes lógicos y
               ampliar el espacio disponible de un sistema de archivos
-              <code>ext4</code> sin interrumpir su montaje y acceso.
+              <code>ext4</code> manteniendo el sistema de archivos montado y
+              accesible durante la ampliación.
             </p>
           </div>
         </section>
@@ -127,8 +128,8 @@
         <section>
           <h2>Preparación del laboratorio</h2>
           <p>
-            Para trabajar en los experimentos de este laboratorio, se añadirá un
-            segundo disco secundario.
+            Para trabajar en los experimentos de este laboratorio, se
+            incorporará un segundo disco virtual adicional a la máquina.
           </p>
           <h3>Estado inicial de la máquina virtual</h3>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS
@@ -375,7 +376,7 @@ WARNING: ext4 signature detected on /dev/sdb1 at offset 1080. Wipe it? [y/n]: y
   Alloc PE / Size       0 / 0
   Free  PE / Size       1279 / <5.00 GiB
   VG UUID               PCAdhh-Snsc-eQNV-QI2u-9ofE-FPvM-LEssyZ</code></pre>
-          <h3>Intepretación</h3>
+          <h3>Interpretación</h3>
           <p>
             La primera inicialización mediante <code>pvcreate /dev/sdb</code> no
             fue posible porque el dispositivo contenía una tabla de particiones.
@@ -383,7 +384,7 @@ WARNING: ext4 signature detected on /dev/sdb1 at offset 1080. Wipe it? [y/n]: y
             correctamente como Volumen Físico (PV). Durante el proceso, LVM
             detectó la firma ext4 existente y solicitó autorización para
             eliminarla, permitiendo sustituir la estructura anterior por
-            metadata de LVM.
+            metadatos de LVM.
           </p>
           <p>
             A continuación, se creó el Grupo de Volúmenes <code>vg_lab</code>,
@@ -412,17 +413,17 @@ WARNING: ext4 signature detected on /dev/sdb1 at offset 1080. Wipe it? [y/n]: y
           </h2>
           <h3>Objetivo</h3>
           <p>
-            Crear un volumen lógico de 1 GB (<code>lv_datos</code>) dentro del
+            Crear un volumen lógico de 1 GiB (<code>lv_datos</code>) dentro del
             grupo de volúmenes
-            <code>vg_lab</code>, formatearlo con Ext4 y montarlo en el sistema
-            de archivos. Se comprobará su configuración y capacidad mediante las
-            herramientas de inspección de LVM y del sistema, relacionando la
-            ruta del dispositivo lógico con la estructura de dispositivos que
-            gestiona el kernel de Linux.
+            <code>vg_lab</code>, formatearlo con <code>ext4</code> y montarlo en
+            el sistema de archivos. Se comprobará su configuración y capacidad
+            mediante las herramientas de inspección de LVM y del sistema,
+            relacionando la ruta del dispositivo lógico con la estructura de
+            dispositivos que gestiona el kernel de Linux.
           </p>
           <h3>Intervención</h3>
           <h4>
-            1. Comprobación del espacio libre disponible en <code>vg_lb</code>
+            1. Comprobación del espacio libre disponible en <code>vg_lab</code>
           </h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo vgs vg_lab
   VG     #PV #LV #SN Attr   VSize  VFree
@@ -447,7 +448,7 @@ Writing superblocks and filesystem accounting information: done</code></pre>
 <span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -Th /mnt/m3data/
 Filesystem                  Type  Size  Used Avail Use% Mounted on
 /dev/mapper/vg_lab-lv_datos ext4  974M   24K  907M   1% /mnt/m3data</code></pre>
-          <h4>4. Inspección</h4>
+          <h4>5. Inspección</h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lvs
   LV        VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
   ubuntu-lv ubuntu-vg -wi-ao---- &lt;14.00g
@@ -473,10 +474,10 @@ Filesystem                  Type  Size  Used Avail Use% Mounted on
           <p>
             El grupo de volúmenes disponía de capacidad suficiente para crear
             <code>lv_datos</code>, que se ha generado con el tamaño solicitado
-            de 1 GiB y se ha formateado correctamente con Ext4. La salida de
-            <code>df -Th</code> confirma que el sistema de archivos está montado
-            en <code>/mnt/m3data</code>, con una capacidad utilizable de 974
-            MiB.
+            de 1 GiB y se ha formateado correctamente con <code>ext4</code>. La
+            salida de <code>df -Th</code> confirma que el sistema de archivos
+            está montado en <code>/mnt/m3data</code>, con una capacidad
+            utilizable de 974 MiB.
           </p>
           <p>
             LVM presenta el volumen lógico mediante la ruta
@@ -493,7 +494,7 @@ Filesystem                  Type  Size  Used Avail Use% Mounted on
         <section>
           <h2>
             Experimento 3 - Extensión del Volumen Lógico y del sistema de
-            archivos en claiente
+            archivos en caliente
           </h2>
           <h3>Objetivo</h3>
           <p>
@@ -547,8 +548,8 @@ drwx------ 2 root root 16384 Nov 11 12:02 lost+found
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo vgextend vg_lab /dev/sdc
   Volume group "vg_lab" successfully extended</code></pre>
           <h4>
-            3. Ampliación y redimensión del sistema de archivos de
-            <code>vg_lab</code>
+            3. Ampliación de <code>lv_datos</code> y redimensionamiento de su
+            sistema de archivos
           </h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lvextend -r -L +1.5G /dev/vg_lab/lv_datos
   Size of logical volume vg_lab/lv_datos changed from 1.00 GiB (256 extents) to 2.50 GiB (640 extents).
@@ -575,9 +576,8 @@ Filesystem                  Type  Size  Used Avail Use% Mounted on
             línea del sistema de archivos <code>ext4</code> mediante
             <code>resize2fs</code>. La salida confirma que la operación se
             realizó con el sistema de archivos montado. Finalmente,
-            <code>df -Th</code> verifica que la capacidad del punto de montaje
-            <code>/mnt/m3data</code> ha aumentado a 2,5 GiB sin desmontar el
-            volumen ni interrumpir su acceso.
+            <code>df -Th</code> verifica que la capacidad del sistema de
+            archivos en <code>/mnt/m3data</code> ha aumentado a 2,5 GiB.
           </p>
         </section>
 
@@ -742,10 +742,11 @@ Filesystem                  Type  Size  Used Avail Use% Mounted on
               El laboratorio demuestra cómo LVM permite construir y administrar
               almacenamiento flexible en Linux, agrupando dispositivos físicos y
               asignando su capacidad a volúmenes lógicos. La ampliación en
-              caliente de <code>lv_datos</code> y de su sistema de archivos
-              <code>ext4</code> evidencia la posibilidad de responder a
-              necesidades de capacidad adicionales sin desmontar el
-              almacenamiento ni interrumpir su acceso.
+              caliente de
+              <code>lv_datos</code>, de 1 GiB a 2,5 GiB, junto con el
+              redimensionamiento en línea de su sistema de archivos
+              <code>ext4</code>, muestra cómo adaptar la capacidad de
+              almacenamiento sin necesidad de desmontar el sistema de archivos.
             </p>
           </div>
         </section>
