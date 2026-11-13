@@ -64,39 +64,40 @@
         <section>
           <div class="callout-box">
             <span class="tag">storage</span>
+            <span class="tag">block-devices</span>
+            <span class="tag">partitions</span>
             <span class="tag">filesystems</span>
+            <span class="tag">mounting</span>
             <span class="tag">lvm</span>
-            <span class="tag">troubleshooting</span>
-            <span class="tag">fstab</span>
-            <span class="tag">inodes</span>
 
             <h3>&gt;_ Relevancia Operativa</h3>
 
             <p>
-              Este módulo desarrolla capacidades prácticas para gestionar la
-              pila de almacenamiento en Linux, configurar sistemas de archivos
-              persistentes y administrar volúmenes lógicos escalables en
-              caliente.
+              Administración de almacenamiento en Linux mediante la gestión de
+              dispositivos de bloques, particiones, sistemas de archivos y
+              volúmenes lógicos con LVM, incluyendo la configuración de montajes
+              persistentes y la ampliación de capacidad en caliente.
             </p>
 
             <p style="margin-top: 0.75rem">
-              Los laboratorios abordan situaciones críticas como servidores
-              inarrancables por fallos en el montaje de discos, pérdida
-              repentina de capacidad por agotamiento de inodos pese a haber
-              espacio libre, y volúmenes de aplicaciones que se quedan sin
-              espacio en producción y requieren expansión en vivo sin detener
-              servicios.
+              Los laboratorios incluyen la resolución de incidencias
+              relacionadas con fallos en el montaje de discos, agotamiento de
+              inodos y falta de espacio en volúmenes de almacenamiento, así como
+              la ampliación de capacidad sin desmontar los sistemas de archivos.
             </p>
+
             <p style="margin-top: 0.75rem">
-              El diagnóstico y la resolución se apoyan en evidencias del sistema
-              y herramientas como <code>lsblk</code>, <code>blkid</code>,
-              <code>fdisk</code>, <code>mkfs</code>, <code>mount</code>,
-              <code>df</code>, <code>stat</code>, <code>pvcreate</code>,
-              <code>vgcreate</code>, <code>lvcreate</code> y
-              <code>lvextend</code>.
+              El trabajo práctico se apoya en herramientas como
+              <code>lsblk</code>, <code>blkid</code>, <code>fdisk</code>,
+              <code>mkfs</code>, <code>mount</code>, <code>df</code>,
+              <code>stat</code>, <code>pvcreate</code>, <code>vgcreate</code>,
+              <code>lvcreate</code> y <code>lvextend</code> para la
+              configuración, inspección y administración de la infraestructura
+              de almacenamiento.
             </p>
           </div>
         </section>
+
         <!-- LABORATORIOS DEL MÓDULO -->
         <section>
           <h2>Laboratorios del módulo</h2>
