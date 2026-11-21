@@ -180,6 +180,7 @@ uid=0(root) gid=0(root) groups=0(root)</code></pre>
             </table>
           </div>
           <h3>Verificaciones</h3>
+          <h4>Auditoría de restricciones</h4>
           <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> sudo -l
 Matching Defaults entries for M2user2 on ubuntu-lab:
     env_reset, mail_badpass,
@@ -187,8 +188,10 @@ Matching Defaults entries for M2user2 on ubuntu-lab:
 
 User M2user2 may run the following commands on ubuntu-lab:
     (root) NOPASSWD: /usr/local/bin/M2app-backup.sh</code></pre>
+          <h4>Bloqueo de escalada</h4>
           <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> sudo /usr/bin/python3 -c "import os; os.execl('/bin/sh', 'sh', '-p')"
 [sudo] password for M2user2:</code></pre>
+          <h4>Acceso operativo legítimo</h4>
           <pre><code><span class="prompt-symbol">M2user2@ubuntu-lab:~$</span> sudo /usr/local/bin/M2app-backup.sh
 Iniciando respaldo de la aplicación...
 Origen: /var/M2apps/share/

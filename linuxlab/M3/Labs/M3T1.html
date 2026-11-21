@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linux Lab | M3T1 Fallo de montaje</title>
+    <!-- Icono para la pestaña del navegador (Favicon) -->
+    <link rel="icon" type="image/png" href="../../../img/Logo.png" />
+    <!-- Hoja de estilos compartida -->
+    <link rel="stylesheet" href="../../../styles.css" />
+  </head>
+  <body>
+    <!-- CABECERA PRINCIPAL (Oscura con navegación sticky) -->
+    <header class="site-header section-dark">
+      <div class="container header-container">
+        <a href="../M3 index.html" class="brand-logo">
+          <span class="prompt-symbol">&gt;_</span> M3 Discos y LVM
+        </a>
+        <nav>
+          <a href="../../../index.html">Inicio</a>
+          <a href="../../../linuxlab/LL index.html" class="active">Linux Lab</a>
+          <a href="../../../proyectos/P index.html">Proyectos</a>
+          <a href="../../../cv/CV index.html">CV</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="container">
+        <!-- ENCABEZADO Y METADATOS DEL LABORATORIO -->
+        <header class="lab-header">
+          <h1>
+            Laboratorio M3T1 &#45; Diagnóstico de fallo de montaje y arranque en
+            <code>Emergency Mode</code>
+          </h1>
+
+          <p class="lead-text">
+            Diagnóstico y resolución de un fallo de arranque en
+            <code>Emergency Mode</code> mediante el análisis de registros de
+            <code>systemd</code>, la identificación de errores en
+            <code>/etc/fstab</code> y la corrección de la configuración de
+            montaje de sistemas de archivos.
+          </p>
+
+          <!-- RELEVANCIA OPERATIVA -->
+          <section>
+            <div class="callout-box">
+              <span class="tag">boot-recovery</span>
+              <span class="tag">incident-response</span>
+              <span class="tag">systemd</span>
+              <span class="tag">service-availability</span>
+
+              <h3>&gt;_ Relevancia Operativa</h3>
+
+              <p>
+                Diagnóstico y recuperación de servidores Linux que no completan
+                el arranque debido a errores en la configuración de montaje de
+                sistemas de archivos, identificando referencias incorrectas en
+                <code>/etc/fstab</code> y sus efectos sobre las dependencias de
+                <code>systemd</code>.
+              </p>
+
+              <p style="margin-top: 0.75rem">
+                Aplicación de procedimientos de recuperación controlada,
+                corrección de la configuración de montaje y verificación
+                posterior del arranque y la disponibilidad de los volúmenes de
+                almacenamiento.
+              </p>
+            </div>
+          </section>
+        </header>
+
+        <!-- CONTEXTO DEL INCIDENTE -->
+        <section>
+          <h2>Contexto del incidente</h2>
+
+          <p>
+            Tras una modificación de la configuración de montaje en
+            <code>/etc/fstab</code>, el servidor Ubuntu deja de completar el
+            proceso de arranque y entra en <code>Emergency Mode</code>. El
+            sistema intenta localizar un volumen de datos mediante un UUID que
+            no corresponde a ningún dispositivo disponible, impidiendo completar
+            la secuencia de montaje. Se requiere identificar la entrada
+            defectuosa, recuperar el arranque normal y restablecer el montaje
+            del volumen.
+          </p>
+        </section>
+
+        <!-- INCIDENCIAS OBSERVADAS -->
+        <section>
+          <h2>Incidencias observadas</h2>
+
+          <p>
+            Durante el arranque, el servidor no consigue completar la secuencia
+            de montaje de los sistemas de archivos y entra en
+            <code>Emergency Mode</code>. El acceso al entorno normal queda
+            interrumpido y el sistema ofrece una consola de mantenimiento para
+            permitir la intervención administrativa.
+          </p>
+
+          <pre><code>You are in emergency mode. After logging in, type "journalctl -xb" to view
+system logs, "systemctl reboot" to reboot, or "exit"
+to continue bootup.
+Press Enter for maintenance
+(or press Control-D to continue):
+
+root@ubuntu-lab:~#</code></pre>
+        </section>
+
+        <!--INVESTIGACIÓN Y CAUSA RAÍZ -->
+        <section>
+          <h2>Investigación y causa raíz</h2>
+          <h3>Intervención</h3>
+          <h4>1. Consulta de los registros de <code>systemd</code></h4>
+          <pre><code>root@ubuntu-lab:~# journalctl -b -1 -u mnt-m3data.mount --no-pager
+Nov 21 12:13:04 ubuntu-lab systemd[1]: Mounting mnt-m3data.mount - /mnt/m3data...
+Nov 21 12:13:04 ubuntu-lab systemd[1]: Mounted mnt-m3data.mount - /mnt/m3data.
+Nov 21 12:15:44 ubuntu-lab systemd[1]: mnt-m3data.mount: Deactivated successfully.
+Nov 21 12:15:44 ubuntu-lab systemd[1]: Unmounted mnt-m3data.mount - /mnt/m3data.</code></pre>
+          <h4>2. Inspección del estado de la unidad de montaje</h4>
+          <pre><code>root@ubuntu-lab:~# systemctl status mnt-m3data.mount --no-pager
+○ mnt-m3data.mount - /mnt/m3data
+     Loaded: loaded (/etc/fstab; generated)
+     Active: inactive (dead)
+      Where: /mnt/m3data
+       What: /dev/disk/by-uuid/7bad2828-9400-4150-b2c6-37e5883b96ac
+       Docs: man:fstab(5)
+             man:systemd-fstab-generator(8)
+
+Nov 21 12:17:03 ubuntu-lab systemd[1]: <span class="prompt-symbol">Dependency failed for mnt-m3data.mount - /mnt/m3data.</span>
+Nov 21 12:17:03 ubuntu-lab systemd[1]: <strong>mnt-m3data.mount: Job mnt-m3data.mount/start failed with result 'dependency'.</strong></code></pre>
+          <h4>3. Inspección de la configuración de montaje</h4>
+          <pre><code>root@ubuntu-lab:~# grep -n 'm3data' /etc/fstab
+<span class="prompt-symbol">13:</span>UUID=7bad2828-9400-4150-b2c6-37e5883b96ac /mnt/m3data ext4 defaults,noatime 0 2</code></pre>
+          <h4>4. Contraste con los dispositivos disponibles</h4>
+          <pre><code>root@ubuntu-lab:~# blkid
+/dev/mapper/vg_lab-lv_datos: UUID="cda74acd-f71e-4591-aa5b-df16385d5eb0" BLOCK_SIZE="4096" TYPE="ext4"
+/dev/sdb1: UUID="nGh0KA-oNBw-cdBb-TqvJ-HS9u-Vnlo-c5Nw50" TYPE="LVM2_member" PARTUUID="51818192-4132-4ceb-b43d-3da7425d049e"
+/dev/mapper/ubuntu--vg-ubuntu--lv: UUID="936e3fd8-a723-4403-abea-c3e4f6473c9d" BLOCK_SIZE="4096" TYPE="ext4"
+/dev/sdc: UUID="UWxImx-6vCV-4SoP-i5bB-co0D-wMmk-3LMGpk" TYPE="LVM2_member"
+/dev/sda2: UUID="377b18da-9afb-4d45-8cef-147139e86a9f" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="8db217fc-3ef8-42ab-a316-d09b71adacde"
+/dev/sda3: UUID="Q1Nejn-KukC-GTvP-tXLd-RRIc-woMG-RwEdDQ" TYPE="LVM2_member" PARTUUID="72b85304-ef33-403d-b6a7-5809f308181c"
+/dev/sda1: PARTUUID="d425f0d8-c7a0-4526-aab7-d926690cd835"</code></pre>
+          <h3>Interpretación</h3>
+          <h3>Interpretación</h3>
+
+          <p>
+            La unidad <code>mnt-m3data.mount</code>, generada por
+            <code>systemd-fstab-generator</code> a partir de
+            <code>/etc/fstab</code>, intenta localizar el volumen mediante el
+            UUID <code>7bad2828-9400-4150-b2c6-37e5883b96ac</code>. Sin embargo,
+            dicho identificador no corresponde a ninguno de los sistemas de
+            archivos detectados. Como consecuencia, la dependencia necesaria
+            para activar el montaje no está disponible y
+            <code>systemd</code> registra un fallo de activación.
+          </p>
+
+          <p>
+            El contraste con la salida de <code>blkid</code> permite identificar
+            el origen del problema: el sistema de archivos ext4 del volumen
+            lógico <code>/dev/mapper/vg_lab-lv_datos</code>
+            tiene asignado el UUID
+            <code>cda74acd-f71e-4591-aa5b-df16385d5eb0</code>. La discrepancia
+            entre ambos identificadores confirma que la entrada de
+            <code>/etc/fstab</code> contiene una referencia incorrecta al
+            dispositivo de almacenamiento.
+          </p>
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Criterio inicial de investigación</strong><br />
+              La investigación se centra inicialmente en el montaje de
+              <code>/mnt/m3data</code>, ya que este volumen había sido objeto de
+              configuración y manipulación en el laboratorio anterior M3C2. Este
+              antecedente lo convierte en un primer punto de comprobación
+              razonable, aunque todavía no constituye una causa confirmada del
+              fallo de arranque.<br />Para mantener la investigación acotada y
+              facilitar la lectura de las evidencias, las consultas se dirigen a
+              la unidad de montaje específica y a su entrada correspondiente en
+              <code>/etc/fstab</code>, evitando salidas generales que no aportan
+              información relevante al diagnóstico.
+            </p>
+          </div>
+        </section>
+
+        <!-- CORRECCIÓN APLICADA -->
+        <section>
+          <h2>Corrección aplicada</h2>
+
+          <p>
+            Se sustituye en <code>/etc/fstab</code> el UUID incorrecto por el
+            identificador real del sistema de archivos
+            <code>ext4</code> correspondiente al volumen lógico
+            <code>/dev/mapper/vg_lab-lv_datos</code>. Se mantienen el punto de
+            montaje, el tipo de sistema de archivos y las opciones de montaje
+            originales.
+          </p>
+
+          <h4>Entrada original</h4>
+          <pre><code>UUID=7bad2828-9400-4150-b2c6-37e5883b96ac /mnt/m3data ext4 defaults,noatime 0 2</code></pre>
+
+          <h4>Entrada corregida</h4>
+          <pre><code>UUID=cda74acd-f71e-4591-aa5b-df16385d5eb0 /mnt/m3data ext4 defaults,noatime 0 2</code></pre>
+        </section>
+
+        <!--VERIFICACIONES POSTERIORES-->
+        <section>
+          <h2>Verificaciones posteriores</h2>
+          <h3>Matriz de verificación</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Prueba de validación</th>
+                  <th>Comando de ejecución</th>
+                  <th>Resultado esperado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Recuperación del arranque</td>
+                  <td><code>systemctl is-system-running</code></td>
+                  <td>
+                    Estado <code>running</code>, sin permanencia en
+                    <code>Emergency Mode</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Activación de la unidad de montaje</td>
+                  <td>
+                    <code>systemctl status mnt-m3data.mount --no-pager</code>
+                  </td>
+                  <td>
+                    Unidad <code>mnt-m3data.mount</code> en estado
+                    <code>active (mounted)</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Disponibilidad del volumen de datos</td>
+                  <td><code>findmnt /mnt/m3data</code></td>
+                  <td>
+                    Volumen lógico
+                    <code>/dev/mapper/vg_lab-lv_datos</code> montado en
+                    <code>/mnt/m3data</code> con opciones
+                    <code>rw,noatime</code>.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Verificaciones</h3>
+          <h4>Recuperación del arranque</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> systemctl is-system-running
+running</code></pre>
+          <h4>Activación de la unidad de montaje</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> systemctl status mnt-m3data.mount --no-pager
+<span class="prompt-symbol">●</span> mnt-m3data.mount - /mnt/m3data
+     Loaded: loaded (/etc/fstab; generated)
+     Active: <span class="prompt-symbol">active (mounted)</span> since Sat 2026-11-21 13:10:22 UTC; 11min ago
+      Where: /mnt/m3data
+       What: /dev/mapper/vg_lab-lv_datos
+       Docs: man:fstab(5)
+             man:systemd-fstab-generator(8)
+      Tasks: 0 (limit: 4600)
+     Memory: 28.0K (peak: 548.0K)
+        CPU: 8ms
+     CGroup: /system.slice/mnt-m3data.mount
+
+Nov 21 13:10:22 ubuntu-lab systemd[1]: Mounting mnt-m3data.mount - /mnt/m3data...
+Nov 21 13:10:22 ubuntu-lab systemd[1]: Mounted mnt-m3data.mount - /mnt/m3data.</code></pre>
+          <h4>Disponibilidad del volumen de datos</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> findmnt /mnt/m3data
+TARGET      SOURCE                      FSTYPE OPTIONS
+/mnt/m3data /dev/mapper/vg_lab-lv_datos ext4   rw,noatime</code></pre>
+          <h3>Interpretación</h3>
+
+          <p>
+            Las verificaciones confirman que el servidor ha recuperado el
+            arranque normal y que <code>systemd</code> se encuentra en estado
+            <code>running</code>. La unidad <code>mnt-m3data.mount</code>
+            aparece activa y montada, sin errores de activación.
+          </p>
+
+          <p>
+            La salida de <code>findmnt</code> confirma que el sistema de
+            archivos ext4 del volumen lógico
+            <code>/dev/mapper/vg_lab-lv_datos</code> está disponible en
+            <code>/mnt/m3data</code>, con permisos de lectura y escritura
+            (<code>rw</code>) y la opción <code>noatime</code>.
+          </p>
+
+          <p>
+            Se considera resuelta la incidencia: la corrección del UUID en
+            <code>/etc/fstab</code> ha permitido completar el arranque y
+            recuperar el montaje del volumen de datos.
+          </p>
+        </section>
+        <!-- EVIDENCIAS DE TERMINAL -->
+        <section>
+          <h2>Evidencias de terminal</h2>
+          <h3>Diagnóstico de la causa raíz</h3>
+          <pre><code>root@ubuntu-lab:~# systemctl status mnt-m3data.mount --no-pager
+○ mnt-m3data.mount - /mnt/m3data
+     Loaded: loaded (/etc/fstab; generated)
+     Active: inactive (dead)
+      Where: /mnt/m3data
+       What: /dev/disk/by-uuid/7bad2828-9400-4150-b2c6-37e5883b96ac
+       Docs: man:fstab(5)
+             man:systemd-fstab-generator(8)
+
+Nov 21 12:17:03 ubuntu-lab systemd[1]: <span class="prompt-symbol">Dependency failed for mnt-m3data.mount - /mnt/m3data.</span>
+Nov 21 12:17:03 ubuntu-lab systemd[1]: <strong>mnt-m3data.mount: Job mnt-m3data.mount/start failed with result 'dependency'.</strong></code></pre>
+          <h3>Recuperación del servicio</h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> findmnt /mnt/m3data
+TARGET      SOURCE                      FSTYPE OPTIONS
+/mnt/m3data /dev/mapper/vg_lab-lv_datos ext4   rw,noatime</code></pre>
+        </section>
+      </div>
+    </main>
+
+    <!-- PIE DE PÁGINA / FOOTER (Fondo oscuro #0F172A) -->
+    <footer class="section-dark site-footer">
+      <div class="container footer-container">
+        <!-- Enlaces de Contacto / Redes -->
+        <div class="footer-contact">
+          <span class="email-selectable">rsoftwareeng@gmail.com</span>
+          <span class="separator">·</span>
+          <a
+            href="https://www.linkedin.com/in/rsoftwareeng"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >LinkedIn</a
+          >
+          <span class="separator">·</span>
+          <a
+            href="https://github.com/RiiUNED"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >GitHub</a
+          >
+        </div>
+
+        <!-- Copyright -->
+        <div class="copyright">&copy; 2026 Ricardo Sánchez</div>
+      </div>
+    </footer>
+  </body>
+</html>
