@@ -42,40 +42,380 @@
           </p>
 
           <!-- RELEVANCIA OPERATIVA -->
-          <section></section>
+          <section>
+            <div class="callout-box">
+              <span class="tag">storage-management</span>
+              <span class="tag">incident-response</span>
+              <span class="tag">inode-management</span>
+              <span class="tag">linux-troubleshooting</span>
+
+              <h3>&gt;_ Relevancia Operativa</h3>
+
+              <p>
+                Diagnóstico de incidencias de almacenamiento en sistemas Linux
+                mediante el análisis de la capacidad disponible, el consumo de
+                inodos y la distribución de archivos en los sistemas de
+                archivos.
+              </p>
+
+              <p style="margin-top: 0.75rem">
+                Identificación de archivos eliminados que permanecen abiertos
+                por procesos activos mediante el análisis de descriptores con
+                <code>lsof</code>, recuperación del espacio retenido y
+                verificación posterior de la disponibilidad del almacenamiento.
+              </p>
+            </div>
+          </section>
         </header>
 
         <!-- CONTEXTO DEL INCIDENTE -->
         <section>
           <h2>Contexto del incidente</h2>
+
+          <p>
+            El sistema de archivos utilizado por una aplicación comienza a
+            presentar problemas de escritura, aunque las comprobaciones
+            iniciales muestran espacio disponible.<br />Tras eliminar un archivo
+            de registro de gran tamaño, el espacio libre no aumenta como se
+            esperaba.
+          </p>
+          <p>
+            Se requiere investigar el consumo de inodos, identificar posibles
+            archivos eliminados que permanezcan abiertos por procesos activos y
+            determinar las causas que impiden la correcta utilización y
+            liberación del almacenamiento.
+          </p>
         </section>
 
         <!-- INCIDENCIAS OBSERVADAS -->
         <section>
-          <h2>Incidencias observadas</h2>
+          <h2>Incidencia observada</h2>
+          <h3>Presentación</h3>
+          <h4>1. Estado del almacenamiento</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -h /mnt/m3data/
+Filesystem                   Size  Used Avail Use% Mounted on
+/dev/mapper/vg_lab-lv_datos  2.5G  257M  2.1G  11% /mnt/m3data
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -i /mnt/m3data/
+Filesystem                  Inodes IUsed  IFree IUse% Mounted on
+/dev/mapper/vg_lab-lv_datos 163840 10014 153826    7% /mnt/m3data</code></pre>
+          <h4>2. Comprobación del número de nodos</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo find /mnt/m3data/appdata -maxdepth 1 -type f | wc -l
+10001</code></pre>
+          <h4>3. Intervención de limpieza</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo rm /mnt/m3data/appdata/application.log</code></pre>
+          <h4>4. Estado del almacenamiento</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -h /mnt/m3data
+Filesystem                   Size  Used Avail Use% Mounted on
+/dev/mapper/vg_lab-lv_datos  2.5G  257M  2.1G  11% /mnt/m3data</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            El sistema de archivos presenta un consumo de inodos del 7 %,
+            asociado a la presencia de 10.001 archivos en el directorio de
+            datos. Aunque este consumo no representa un agotamiento de inodos,
+            constituye un incremento que conviene analizar.
+          </p>
+
+          <p>
+            Tras eliminar el archivo de registro de gran tamaño, los valores de
+            espacio ocupado y disponible mostrados por
+            <code>df</code> no varían. La eliminación no ha producido la
+            recuperación de espacio esperada, por lo que es necesario investigar
+            qué elementos siguen ocupando almacenamiento en el sistema de
+            archivos.
+          </p>
         </section>
 
         <!--INVESTIGACIÓN Y CAUSA RAÍZ -->
         <section>
           <h2>Investigación y causa raíz</h2>
+          <h3>Intervención</h3>
+          <h4>1. Capacidad y disponibilidad de inodos</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -h /mnt/m3data
+Filesystem                   Size  Used Avail Use% Mounted on
+/dev/mapper/vg_lab-lv_datos  2.5G  257M  2.1G  11% /mnt/m3data
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -i /mnt/m3data
+Filesystem                  Inodes IUsed  IFree IUse% Mounted on
+/dev/mapper/vg_lab-lv_datos 163840 10014 153826    7% /mnt/m3data</code></pre>
+          <h4>2. Distribución de archivos</h4>
+          <p style="margin-bottom: 0.15rem">Archivos existentes.</p>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo du -xhd1 /mnt/m3data
+324K    /mnt/m3data/appdata
+16K     /mnt/m3data/lost+found
+344K    /mnt/m3data
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo find /mnt/m3data -xdev -type f | wc -l
+10001</code></pre>
+          <p style="margin-bottom: 0.15rem">
+            Directorios que concentran más archivos
+          </p>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo find /mnt/m3data/ -xdev -type f -printf '%h\n' | sort | uniq -c | sort -nr
+  10000 /mnt/m3data/appdata
+      1 /mnt/m3data</code></pre>
+          <p style="margin-bottom: 0.15rem">Exploración del consumo</p>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo ncdu /mnt/m3data
+--- /mnt/m3data --------------------------------------------------------------------------------------
+  324.0 KiB [##############] /appdata
+e  16.0 KiB [              ] /lost+found
+    0.0   B [              ]  m3c2.txt</code></pre>
+
+          <h4>
+            3. Investigación sobre los archivos eliminados que siguen abiertos
+          </h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lsof +L1
+COMMAND     PID    USER   FD   TYPE DEVICE  SIZE/OFF NLINK  NODE NAME
+systemd       1    root  121u   REG    0,1      1402     0  1089 /memfd:data-fd (deleted)
+systemd-l   779    root  txt    REG  252,0    285264     0 11256 /usr/lib/systemd/systemd-logind (deleted)
+(sd-pam)   1141 ricardo  txt    REG  252,0    137792     0 11246 /usr/lib/systemd/systemd-executor (deleted)
+tail      16987    root    3r   REG  252,1 268435456     0 10014 /mnt/m3data/appdata/application.log (deleted)</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lsof -p "$(sudo cat /run/m3t2-holder.pid)"
+COMMAND   PID USER   FD      TYPE DEVICE  SIZE/OFF   NODE NAME
+tail    16987 root  cwd       DIR  252,0      4096 524584 /home/ricardo/linux-lab/m03
+tail    16987 root  rtd       DIR  252,0      4096      2 /
+tail    16987 root  txt       REG  252,0     64032  20705 /usr/bin/tail
+tail    16987 root  mem       REG  252,0   3055776    958 /usr/lib/locale/locale-archive
+tail    16987 root  mem       REG  252,0   2129424  14525 /usr/lib/x86_64-linux-gnu/libc.so.6
+tail    16987 root  mem       REG  252,0    236616  14522 /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+tail    16987 root    0u      CHR  136,1       0t0      4 /dev/pts/1
+tail    16987 root    1w      CHR    1,3       0t0      5 /dev/null
+tail    16987 root    2u      CHR  136,1       0t0      4 /dev/pts/1
+tail    16987 root    3r      REG  252,1 268435456  10014 /mnt/m3data/appdata/application.log (deleted)
+tail    16987 root    4r  a_inode   0,15         0   1062 inotify</code></pre>
+          <h4>4. Confirmación de la retención de espacio</h4>
+          <p style="margin-bottom: 0.15rem">
+            Eliminación del archivo de registro
+          </p>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo rm /mnt/m3data/appdata/application.log
+rm: cannot remove '/mnt/m3data/appdata/application.log': No such file or directory</code></pre>
+          <p style="margin-bottom: 0.15rem">Estado del almacenamiento</p>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -h /mnt/m3data
+Filesystem                   Size  Used Avail Use% Mounted on
+/dev/mapper/vg_lab-lv_datos  2.5G  257M  2.1G  11% /mnt/m3data
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo du -sh /mnt/m3data
+344K    /mnt/m3data</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lsof +L1
+COMMAND     PID    USER   FD   TYPE DEVICE  SIZE/OFF NLINK  NODE NAME
+systemd       1    root  121u   REG    0,1      1402     0  1089 /memfd:data-fd (deleted)
+systemd-l   779    root  txt    REG  252,0    285264     0 11256 /usr/lib/systemd/systemd-logind (deleted)
+(sd-pam)   1141 ricardo  txt    REG  252,0    137792     0 11246 /usr/lib/systemd/systemd-executor (deleted)
+tail      16987    root    3r   REG  252,1 268435456     0 10014 /mnt/m3data/appdata/application.log (deleted)</code></pre>
+          <h3>Interpretación</h3>
+
+          <p>
+            Las comprobaciones de capacidad muestran que el sistema de archivos
+            dispone de 2,1 GB libres y mantiene un consumo de inodos del 7 %. El
+            análisis de la estructura de directorios identifica 10.001 archivos,
+            de los cuales 10.000 se concentran en
+            <code>/mnt/m3data/appdata</code>. Se confirma una elevada
+            concentración de archivos pequeños, aunque no existe agotamiento de
+            inodos.
+          </p>
+
+          <p>
+            La salida de <code>lsof +L1</code> identifica un proceso
+            <code>tail</code> que mantiene abierto el archivo
+            <code>application.log</code>, de 256 MB, cuyo enlace al sistema de
+            archivos ya ha sido eliminado <code>NLINK 0</code>.<br />La consulta
+            de sus descriptores confirma que el proceso conserva abierto el
+            archivo eliminado.
+          </p>
+
+          <p>
+            La comparación entre <code>df</code> y <code>du</code> confirma la
+            discrepancia: el sistema de archivos mantiene 257 MB ocupados,
+            mientras que los archivos accesibles desde el directorio ocupan
+            únicamente 344 KB. La diferencia corresponde al espacio retenido por
+            el archivo eliminado que continúa abierto por el proceso.
+          </p>
+
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Conclusión</strong><br />La causa raíz es la permanencia
+              de un descriptor abierto sobre un archivo eliminado. Mientras el
+              proceso mantenga abierto ese descriptor, el sistema de archivos no
+              puede liberar los bloques que ocupa.
+            </p>
+          </div>
         </section>
 
         <!-- CORRECCIÓN APLICADA -->
         <section>
           <h2>Corrección aplicada</h2>
+          <h3>Liberación del espacio retenido</h3>
+          <h4>Finalización del proceso de prueba</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo kill "$(sudo cat /run/m3t2-holder.pid)"</code></pre>
+          <h4>Comprobación</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lsof +L1
+COMMAND    PID    USER   FD   TYPE DEVICE SIZE/OFF NLINK  NODE NAME
+systemd      1    root  121u   REG    0,1     1402     0  1089 /memfd:data-fd (deleted)
+systemd-l  779    root  txt    REG  252,0   285264     0 11256 /usr/lib/systemd/systemd-logind (deleted)
+(sd-pam)  1141 ricardo  txt    REG  252,0   137792     0 11246 /usr/lib/systemd/systemd-executor (deleted)
+[1]+  Terminated              sudo bash hold_log.sh  (wd: ~/linux-lab/m03)
+(wd now: ~)</code></pre>
+          <h3>Recuperación de los inodos utilizados</h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo rm -f /mnt/m3data/appdata/file_*.dat</code></pre>
+          <h3>Interpretación</h3>
+          <p>
+            La finalización del proceso <code>tail</code> cierra el descriptor
+            que mantenía abierto el archivo eliminado, permitiendo al sistema de
+            archivos recuperar los 256 MB retenidos. La ausencia de dicho
+            archivo en la salida de <code>lsof +L1</code> confirma que ya no
+            permanece abierto por el proceso de prueba.
+          </p>
+
+          <p>
+            También se eliminan los 10.000 archivos pequeños, permitiendo
+            recuperar los inodos que ocupaban y reduciendo el consumo asociado a
+            la acumulación de archivos en el directorio de datos.
+          </p>
         </section>
 
         <!--VERIFICACIONES POSTERIORES-->
         <section>
           <h2>Verificaciones posteriores</h2>
           <h3>Matriz de verificación</h3>
-
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Prueba de validación</th>
+                  <th>Comando de ejecución</th>
+                  <th>Resultado esperado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Disponibilidad de espacio</td>
+                  <td><code>df -h /mnt/m3data</code></td>
+                  <td>
+                    Recuperación del espacio ocupado por el archivo eliminado,
+                    con aproximadamente 2,4 GB disponibles.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Recuperación de inodos</td>
+                  <td><code>df -i /mnt/m3data</code></td>
+                  <td>
+                    Reducción del número de inodos utilizados tras eliminar los
+                    10.000 archivos pequeños.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Espacio ocupado por archivos</td>
+                  <td><code>sudo du -sh /mnt/m3data</code></td>
+                  <td>
+                    Reducción del espacio ocupado tras eliminar los archivos de
+                    prueba.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Liberación de archivos eliminados</td>
+                  <td><code>sudo lsof +L1</code></td>
+                  <td>
+                    Ausencia de <code>application.log</code> en la lista de
+                    archivos eliminados que permanecen abiertos.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <h3>Verificaciones</h3>
-
+          <h4>Disponibilidad de espacio</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -h /mnt/m3data/
+Filesystem                   Size  Used Avail Use% Mounted on
+/dev/mapper/vg_lab-lv_datos  2.5G  348K  2.4G   1% /mnt/m3data</code></pre>
+          <h4>Recuperación de inodos</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -i /mnt/m3data/
+Filesystem                  Inodes IUsed  IFree IUse% Mounted on
+/dev/mapper/vg_lab-lv_datos 163840    13 163827    1% /mnt/m3data</code></pre>
+          <h4>Espacio ocupado por archivos</h4>
+          <pre><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo du -sh /mnt/m3data/
+344K    /mnt/m3data/</pre>
+          <h4>Liberación de archivos eliminados</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lsof +L1
+COMMAND    PID    USER   FD   TYPE DEVICE SIZE/OFF NLINK  NODE NAME
+systemd      1    root  121u   REG    0,1     1402     0  1089 /memfd:data-fd (deleted)
+systemd-l  779    root  txt    REG  252,0   285264     0 11256 /usr/lib/systemd/systemd-logind (deleted)
+(sd-pam)  1141 ricardo  txt    REG  252,0   137792     0 11246 /usr/lib/systemd/systemd-executor (deleted)</code></pre>
           <h3>Interpretación</h3>
+
+          <p>
+            Las comprobaciones confirman la recuperación del espacio de
+            almacenamiento retenido por el archivo eliminado, con 2,4 GB
+            disponibles y una ocupación del 1 %. El consumo de inodos se reduce
+            de 10.014 a 13, recuperando prácticamente la totalidad de los inodos
+            utilizados por los archivos de prueba.
+          </p>
+
+          <p>
+            La ocupación del sistema de archivos se reduce a 344 KB según
+            <code>du</code>. Por último, <code>lsof +L1</code> ya no muestra el
+            archivo <code>application.log</code> entre los archivos eliminados
+            que permanecen abiertos por procesos activos.
+          </p>
+
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Conclusión</strong><br />Se confirma la resolución de la
+              incidencia y la recuperación de la disponibilidad del
+              almacenamiento.
+            </p>
+          </div>
         </section>
+
         <!-- EVIDENCIAS DE TERMINAL -->
-        <section></section>
+        <section>
+          <h2>Evidencias de terminal</h2>
+          <h3>Identificación del archivo eliminado que permanece abierto</h3>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lsof +L1
+COMMAND     PID    USER   FD   TYPE DEVICE  SIZE/OFF NLINK  NODE NAME
+systemd       1    root  121u   REG    0,1      1402     0  1089 /memfd:data-fd (deleted)
+systemd-l   779    root  txt    REG  252,0    285264     0 11256 /usr/lib/systemd/systemd-logind (deleted)
+(sd-pam)   1141 ricardo  txt    REG  252,0    137792     0 11246 /usr/lib/systemd/systemd-executor (deleted)
+tail      16987    root    3r   REG  252,1 268435456     0 10014 /mnt/m3data/appdata/application.log (deleted)</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lsof -p "$(sudo cat /run/m3t2-holder.pid)"
+COMMAND   PID USER   FD      TYPE DEVICE  SIZE/OFF   NODE NAME
+tail    16987 root  cwd       DIR  252,0      4096 524584 /home/ricardo/linux-lab/m03
+tail    16987 root  rtd       DIR  252,0      4096      2 /
+tail    16987 root  txt       REG  252,0     64032  20705 /usr/bin/tail
+tail    16987 root  mem       REG  252,0   3055776    958 /usr/lib/locale/locale-archive
+tail    16987 root  mem       REG  252,0   2129424  14525 /usr/lib/x86_64-linux-gnu/libc.so.6
+tail    16987 root  mem       REG  252,0    236616  14522 /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+tail    16987 root    0u      CHR  136,1       0t0      4 /dev/pts/1
+tail    16987 root    1w      CHR    1,3       0t0      5 /dev/null
+tail    16987 root    2u      CHR  136,1       0t0      4 /dev/pts/1
+tail    16987 root    3r      REG  252,1 268435456  10014 /mnt/m3data/appdata/application.log (deleted)
+tail    16987 root    4r  a_inode   0,15         0   1062 inotify</code></pre>
+          <h3>Verificación de la recuperación del almacenamiento</h3>
+          <h4>Estado del almacenamiento durante la incidencia</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -h /mnt/m3data/
+Filesystem                   Size  Used Avail Use% Mounted on
+/dev/mapper/vg_lab-lv_datos  2.5G  257M  2.1G  11% /mnt/m3data
+<span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -i /mnt/m3data/
+Filesystem                  Inodes IUsed  IFree IUse% Mounted on
+/dev/mapper/vg_lab-lv_datos 163840 10014 153826    7% /mnt/m3data</code></pre>
+          <h4>Estado del almacenamiento tras la correción</h4>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -h /mnt/m3data/
+Filesystem                   Size  Used Avail Use% Mounted on
+/dev/mapper/vg_lab-lv_datos  2.5G  348K  2.4G   1% /mnt/m3data</code></pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -i /mnt/m3data/
+Filesystem                  Inodes IUsed  IFree IUse% Mounted on
+/dev/mapper/vg_lab-lv_datos 163840    13 163827    1% /mnt/m3data</code></pre>
+        </section>
+
+        <!-- IMÁGENES -->
+        <section>
+          <h2>Imágenes</h2>
+
+          <figure class="lab-figure">
+            <img
+              src="../../../img/m3ncdu.png"
+              alt="Análisis del espacio ocupado en el sistema de archivos mediante ncdu"
+              class="lab-img"
+            />
+            <figcaption>
+              Análisis visual del consumo de almacenamiento con ncdu
+            </figcaption>
+          </figure>
+        </section>
       </div>
     </main>
 
