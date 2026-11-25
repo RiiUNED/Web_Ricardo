@@ -46,7 +46,10 @@
               >
             </li>
             <li>
-              <strong>Resolución de incidencias de almacenamiento lleno</strong>
+              <strong
+                >Diagnóstico y resolución de incidencias de
+                almacenamiento</strong
+              >
             </li>
           </ul>
 
@@ -54,9 +57,10 @@
             Se investiga cómo la pila de almacenamiento gestiona los
             dispositivos físicos y virtuales, cómo se estructuran los sistemas
             de archivos a nivel de bloques e inodos, cómo abstraer el
-            almacenamiento mediante LVM para redimensionar volúmenes sin detener
-            servicios y cómo aplicar metodologías de diagnóstico ante fallos
-            críticos de arranque y saturación de espacio o inodos.
+            almacenamiento mediante LVM para ampliar volúmenes sin desmontar los
+            sistemas de archivos y cómo aplicar metodologías de diagnóstico ante
+            fallos críticos de arranque e incidencias relacionadas con el
+            consumo de espacio e inodos.
           </p>
         </section>
 
@@ -73,27 +77,28 @@
             <h3>&gt;_ Relevancia Operativa</h3>
 
             <p>
-              Administración de almacenamiento en Linux mediante la gestión de
+              Administración del almacenamiento en Linux mediante la gestión de
               dispositivos de bloques, particiones, sistemas de archivos y
               volúmenes lógicos con LVM, incluyendo la configuración de montajes
-              persistentes y la ampliación de capacidad en caliente.
+              persistentes y la ampliación de capacidad con el sistema de
+              archivos en uso.
             </p>
 
             <p style="margin-top: 0.75rem">
-              Los laboratorios incluyen la resolución de incidencias
-              relacionadas con fallos en el montaje de discos, agotamiento de
-              inodos y falta de espacio en volúmenes de almacenamiento, así como
-              la ampliación de capacidad sin desmontar los sistemas de archivos.
+              Los laboratorios abordan la resolución de incidencias relacionadas
+              con errores de configuración de montaje, la retención de espacio
+              por archivos eliminados que permanecen abiertos y la acumulación
+              de archivos pequeños que incrementan el consumo de inodos.
             </p>
 
             <p style="margin-top: 0.75rem">
-              El trabajo práctico se apoya en herramientas como
+              El trabajo práctico utiliza herramientas como
               <code>lsblk</code>, <code>blkid</code>, <code>fdisk</code>,
               <code>mkfs</code>, <code>mount</code>, <code>df</code>,
-              <code>stat</code>, <code>pvcreate</code>, <code>vgcreate</code>,
-              <code>lvcreate</code> y <code>lvextend</code> para la
-              configuración, inspección y administración de la infraestructura
-              de almacenamiento.
+              <code>du</code>, <code>stat</code>, <code>lsof</code>,
+              <code>pvcreate</code>, <code>vgcreate</code>,
+              <code>lvcreate</code> y <code>lvextend</code> para inspeccionar,
+              administrar y diagnosticar la infraestructura de almacenamiento.
             </p>
           </div>
         </section>
@@ -115,10 +120,10 @@
               </h3>
 
               <p>
-                Identificación de dispositivos de bloques, particionado GPT/MBR
-                y creación de sistemas de archivos <code>ext4</code>,
-                <code>xfs</code>. Análisis de la estructura interna de inodos y
-                bloques, y configuración de persistencia mediante UUID en
+                Identificación de dispositivos de bloques, creación de
+                particiones GPT y sistemas de archivos <code>ext4</code>.
+                Análisis de la estructura interna de inodos y bloques, y
+                configuración de montajes persistentes mediante UUID en
                 <code>/etc/fstab</code>.
               </p>
             </article>
@@ -137,31 +142,33 @@
               <p>
                 Creación de la arquitectura LVM en tres capas (PV, VG y LV),
                 monitorización de su estado y ampliación de volúmenes lógicos
-                con redimensionamiento simultáneo de sistemas de archivos en
-                caliente, sin necesidad de desmontarlos.
+                con redimensionamiento simultáneo de sistemas de archivos
+                montados, sin necesidad de desmontarlos.
               </p>
             </article>
 
-            <!-- M3T1 Troubleshooting: Servidor inarrancable por fstab -->
+            <!-- M3T1 Troubleshooting: Recuperación del arranque por fallo en /etc/fstab -->
             <article class="card">
               <span class="tag">M3T1</span>
               <span class="tag">TROUBLESHOOTING</span>
 
               <h3>
                 <a href="./Labs/M3T1.html" class="prompt-link"
-                  >Servidor inarrancable por fstab</a
+                  >Recuperación del arranque por fallo en
+                  <code>/etc/fstab</code></a
                 >
               </h3>
 
               <p>
-                Diagnóstico de emergencia en Emergency Mode ante fallos de
-                arranque causados por entradas erróneas, UUIDs inexistentes o
-                sintaxis corrupta en <code>/etc/fstab</code>, aplicando buenas
-                prácticas operacionales.
+                Diagnóstico y recuperación de un servidor Linux que entra en
+                <code>Emergency Mode</code> debido a una referencia UUID
+                incorrecta en <code>/etc/fstab</code>, mediante el análisis de
+                registros de <code>systemd</code> y la corrección de la
+                configuración de montaje.
               </p>
             </article>
 
-            <!-- M3T2 Troubleshooting: Almacenamiento lleno e inodos -->
+            <!-- M3T2 Troubleshooting: Diagnóstico de incidencias de almacenamiento -->
             <article class="card">
               <span class="tag">M3T2</span>
               <span class="tag">TROUBLESHOOTING</span>
@@ -175,7 +182,8 @@
               <p>
                 Análisis del consumo de inodos y detección de archivos
                 eliminados que permanecen abiertos por procesos activos,
-                impidiendo la liberación del espacio ocupado.
+                reteniendo espacio en disco hasta que se cierran sus
+                descriptores de archivo.
               </p>
             </article>
           </div>
