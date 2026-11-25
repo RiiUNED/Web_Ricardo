@@ -71,19 +71,11 @@
         <!-- CONTEXTO DEL INCIDENTE -->
         <section>
           <h2>Contexto del incidente</h2>
-
           <p>
-            El sistema de archivos utilizado por una aplicación comienza a
-            presentar problemas de escritura, aunque las comprobaciones
-            iniciales muestran espacio disponible.<br />Tras eliminar un archivo
-            de registro de gran tamaño, el espacio libre no aumenta como se
-            esperaba.
-          </p>
-          <p>
-            Se requiere investigar el consumo de inodos, identificar posibles
-            archivos eliminados que permanezcan abiertos por procesos activos y
-            determinar las causas que impiden la correcta utilización y
-            liberación del almacenamiento.
+            En el servidor Ubuntu del laboratorio, una aplicación utiliza el
+            sistema de archivos montado en <code>/mnt/m3data</code> para
+            almacenar sus datos y archivos de registro. Este volumen está sujeto
+            a tareas de supervisión y mantenimiento del almacenamiento.
           </p>
         </section>
 
@@ -98,10 +90,10 @@ Filesystem                   Size  Used Avail Use% Mounted on
 <span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -i /mnt/m3data/
 Filesystem                  Inodes IUsed  IFree IUse% Mounted on
 /dev/mapper/vg_lab-lv_datos 163840 10014 153826    7% /mnt/m3data</code></pre>
-          <h4>2. Comprobación del número de nodos</h4>
+          <h4>2. Comprobación del número de archivos</h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo find /mnt/m3data/appdata -maxdepth 1 -type f | wc -l
 10001</code></pre>
-          <h4>3. Intervención de limpieza</h4>
+          <h4>3. Eliminación del archivo de registro</h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo rm /mnt/m3data/appdata/application.log</code></pre>
           <h4>4. Estado del almacenamiento</h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -h /mnt/m3data
@@ -110,9 +102,10 @@ Filesystem                   Size  Used Avail Use% Mounted on
           <h3>Interpretación</h3>
           <p>
             El sistema de archivos presenta un consumo de inodos del 7 %,
-            asociado a la presencia de 10.001 archivos en el directorio de
-            datos. Aunque este consumo no representa un agotamiento de inodos,
-            constituye un incremento que conviene analizar.
+            asociado a la presencia de 10.001 archivos en el directorio
+            <code>/mnt/m3data/appdata</code>. Aunque este consumo no representa
+            un agotamiento de inodos, constituye un incremento que conviene
+            analizar.
           </p>
 
           <p>
@@ -128,7 +121,7 @@ Filesystem                   Size  Used Avail Use% Mounted on
         <!--INVESTIGACIÓN Y CAUSA RAÍZ -->
         <section>
           <h2>Investigación y causa raíz</h2>
-          <h3>Intervención</h3>
+          <h3>Análisis</h3>
           <h4>1. Capacidad y disponibilidad de inodos</h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -h /mnt/m3data
 Filesystem                   Size  Used Avail Use% Mounted on
@@ -202,8 +195,8 @@ tail      16987    root    3r   REG  252,1 268435456     0 10014 /mnt/m3data/app
           <p>
             Las comprobaciones de capacidad muestran que el sistema de archivos
             dispone de 2,1 GB libres y mantiene un consumo de inodos del 7 %. El
-            análisis de la estructura de directorios identifica 10.001 archivos,
-            de los cuales 10.000 se concentran en
+            análisis de la estructura de directorios identifica 10.001 archivos
+            en el sistema de archivos, de los cuales 10.000 se concentran en
             <code>/mnt/m3data/appdata</code>. Se confirma una elevada
             concentración de archivos pequeños, aunque no existe agotamiento de
             inodos.
@@ -212,10 +205,10 @@ tail      16987    root    3r   REG  252,1 268435456     0 10014 /mnt/m3data/app
           <p>
             La salida de <code>lsof +L1</code> identifica un proceso
             <code>tail</code> que mantiene abierto el archivo
-            <code>application.log</code>, de 256 MB, cuyo enlace al sistema de
-            archivos ya ha sido eliminado <code>NLINK 0</code>.<br />La consulta
-            de sus descriptores confirma que el proceso conserva abierto el
-            archivo eliminado.
+            <code>application.log</code>, de 256 MiB, cuyo número de enlaces al
+            sistema de archivos es cero (<code>NLINK 0</code>). La consulta de
+            sus descriptores confirma que el proceso conserva abierto el archivo
+            eliminado.
           </p>
 
           <p>
@@ -256,7 +249,7 @@ systemd-l  779    root  txt    REG  252,0   285264     0 11256 /usr/lib/systemd/
           <p>
             La finalización del proceso <code>tail</code> cierra el descriptor
             que mantenía abierto el archivo eliminado, permitiendo al sistema de
-            archivos recuperar los 256 MB retenidos. La ausencia de dicho
+            archivos recuperar los 256 MiB retenidos. La ausencia de dicho
             archivo en la salida de <code>lsof +L1</code> confirma que ya no
             permanece abierto por el proceso de prueba.
           </p>
@@ -327,8 +320,8 @@ Filesystem                   Size  Used Avail Use% Mounted on
 Filesystem                  Inodes IUsed  IFree IUse% Mounted on
 /dev/mapper/vg_lab-lv_datos 163840    13 163827    1% /mnt/m3data</code></pre>
           <h4>Espacio ocupado por archivos</h4>
-          <pre><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo du -sh /mnt/m3data/
-344K    /mnt/m3data/</pre>
+          <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo du -sh /mnt/m3data/
+344K    /mnt/m3data/</code></pre>
           <h4>Liberación de archivos eliminados</h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> sudo lsof +L1
 COMMAND    PID    USER   FD   TYPE DEVICE SIZE/OFF NLINK  NODE NAME
@@ -392,7 +385,7 @@ Filesystem                   Size  Used Avail Use% Mounted on
 <span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -i /mnt/m3data/
 Filesystem                  Inodes IUsed  IFree IUse% Mounted on
 /dev/mapper/vg_lab-lv_datos 163840 10014 153826    7% /mnt/m3data</code></pre>
-          <h4>Estado del almacenamiento tras la correción</h4>
+          <h4>Estado del almacenamiento tras la corrección</h4>
           <pre><code><span class="prompt-symbol">ricardo@ubuntu-lab:~$</span> df -h /mnt/m3data/
 Filesystem                   Size  Used Avail Use% Mounted on
 /dev/mapper/vg_lab-lv_datos  2.5G  348K  2.4G   1% /mnt/m3data</code></pre>
