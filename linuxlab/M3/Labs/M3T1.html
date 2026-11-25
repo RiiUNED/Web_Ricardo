@@ -71,25 +71,9 @@
           </section>
         </header>
 
-        <!-- CONTEXTO DEL INCIDENTE -->
+        <!-- INCIDENCIA OBSERVADA -->
         <section>
-          <h2>Contexto del incidente</h2>
-
-          <p>
-            Tras una modificación de la configuración de montaje en
-            <code>/etc/fstab</code>, el servidor Ubuntu deja de completar el
-            proceso de arranque y entra en <code>Emergency Mode</code>. El
-            sistema intenta localizar un volumen de datos mediante un UUID que
-            no corresponde a ningún dispositivo disponible, impidiendo completar
-            la secuencia de montaje. Se requiere identificar la entrada
-            defectuosa, recuperar el arranque normal y restablecer el montaje
-            del volumen.
-          </p>
-        </section>
-
-        <!-- INCIDENCIAS OBSERVADAS -->
-        <section>
-          <h2>Incidencias observadas</h2>
+          <h2>Incidencia observada</h2>
 
           <p>
             Durante el arranque, el servidor no consigue completar la secuencia
@@ -112,13 +96,22 @@ root@ubuntu-lab:~#</code></pre>
         <section>
           <h2>Investigación y causa raíz</h2>
           <h3>Intervención</h3>
-          <h4>1. Consulta de los registros de <code>systemd</code></h4>
-          <pre><code>root@ubuntu-lab:~# journalctl -b -1 -u mnt-m3data.mount --no-pager
-Nov 21 12:13:04 ubuntu-lab systemd[1]: Mounting mnt-m3data.mount - /mnt/m3data...
-Nov 21 12:13:04 ubuntu-lab systemd[1]: Mounted mnt-m3data.mount - /mnt/m3data.
-Nov 21 12:15:44 ubuntu-lab systemd[1]: mnt-m3data.mount: Deactivated successfully.
-Nov 21 12:15:44 ubuntu-lab systemd[1]: Unmounted mnt-m3data.mount - /mnt/m3data.</code></pre>
-          <h4>2. Inspección del estado de la unidad de montaje</h4>
+          <div class="card" style="margin-top: 1.5rem">
+            <p>
+              <strong>Criterio inicial de investigación</strong><br />
+              La investigación se centra inicialmente en el montaje de
+              <code>/mnt/m3data</code>, ya que este volumen había sido objeto de
+              configuración y manipulación en el laboratorio anterior M3C2. Este
+              antecedente lo convierte en un primer punto de comprobación
+              razonable, aunque todavía no constituye una causa confirmada del
+              fallo de arranque.<br />Para mantener la investigación acotada y
+              facilitar la lectura de las evidencias, las consultas se dirigen a
+              la unidad de montaje específica y a su entrada correspondiente en
+              <code>/etc/fstab</code>, evitando salidas generales que no aportan
+              información relevante al diagnóstico.
+            </p>
+          </div>
+          <h4>1. Inspección del estado de la unidad de montaje</h4>
           <pre><code>root@ubuntu-lab:~# systemctl status mnt-m3data.mount --no-pager
 ○ mnt-m3data.mount - /mnt/m3data
      Loaded: loaded (/etc/fstab; generated)
@@ -130,10 +123,10 @@ Nov 21 12:15:44 ubuntu-lab systemd[1]: Unmounted mnt-m3data.mount - /mnt/m3data.
 
 Nov 21 12:17:03 ubuntu-lab systemd[1]: <span class="prompt-symbol">Dependency failed for mnt-m3data.mount - /mnt/m3data.</span>
 Nov 21 12:17:03 ubuntu-lab systemd[1]: <strong>mnt-m3data.mount: Job mnt-m3data.mount/start failed with result 'dependency'.</strong></code></pre>
-          <h4>3. Inspección de la configuración de montaje</h4>
+          <h4>2. Inspección de la configuración de montaje</h4>
           <pre><code>root@ubuntu-lab:~# grep -n 'm3data' /etc/fstab
 <span class="prompt-symbol">13:</span>UUID=7bad2828-9400-4150-b2c6-37e5883b96ac /mnt/m3data ext4 defaults,noatime 0 2</code></pre>
-          <h4>4. Contraste con los dispositivos disponibles</h4>
+          <h4>3. Contraste con los dispositivos disponibles</h4>
           <pre><code>root@ubuntu-lab:~# blkid
 /dev/mapper/vg_lab-lv_datos: UUID="cda74acd-f71e-4591-aa5b-df16385d5eb0" BLOCK_SIZE="4096" TYPE="ext4"
 /dev/sdb1: UUID="nGh0KA-oNBw-cdBb-TqvJ-HS9u-Vnlo-c5Nw50" TYPE="LVM2_member" PARTUUID="51818192-4132-4ceb-b43d-3da7425d049e"
@@ -155,8 +148,8 @@ Nov 21 12:17:03 ubuntu-lab systemd[1]: <strong>mnt-m3data.mount: Job mnt-m3data.
           </p>
 
           <p>
-            El contraste con la salida de <code>blkid</code> permite identificar
-            el origen del problema: el sistema de archivos ext4 del volumen
+            La salida de <code>blkid</code> permite identificar el origen del
+            problema: el sistema de archivos <code>ext4</code> del volumen
             lógico <code>/dev/mapper/vg_lab-lv_datos</code>
             tiene asignado el UUID
             <code>cda74acd-f71e-4591-aa5b-df16385d5eb0</code>. La discrepancia
@@ -164,21 +157,6 @@ Nov 21 12:17:03 ubuntu-lab systemd[1]: <strong>mnt-m3data.mount: Job mnt-m3data.
             <code>/etc/fstab</code> contiene una referencia incorrecta al
             dispositivo de almacenamiento.
           </p>
-          <div class="card" style="margin-top: 1.5rem">
-            <p>
-              <strong>Criterio inicial de investigación</strong><br />
-              La investigación se centra inicialmente en el montaje de
-              <code>/mnt/m3data</code>, ya que este volumen había sido objeto de
-              configuración y manipulación en el laboratorio anterior M3C2. Este
-              antecedente lo convierte en un primer punto de comprobación
-              razonable, aunque todavía no constituye una causa confirmada del
-              fallo de arranque.<br />Para mantener la investigación acotada y
-              facilitar la lectura de las evidencias, las consultas se dirigen a
-              la unidad de montaje específica y a su entrada correspondiente en
-              <code>/etc/fstab</code>, evitando salidas generales que no aportan
-              información relevante al diagnóstico.
-            </p>
-          </div>
         </section>
 
         <!-- CORRECCIÓN APLICADA -->
@@ -281,10 +259,10 @@ TARGET      SOURCE                      FSTYPE OPTIONS
 
           <p>
             La salida de <code>findmnt</code> confirma que el sistema de
-            archivos ext4 del volumen lógico
+            archivos <code>ext4</code> del volumen lógico
             <code>/dev/mapper/vg_lab-lv_datos</code> está disponible en
-            <code>/mnt/m3data</code>, con permisos de lectura y escritura
-            (<code>rw</code>) y la opción <code>noatime</code>.
+            <code>/mnt/m3data</code>, montado en modo lectura y escritura
+            <code>rw</code> y con la opción <code>noatime</code>.
           </p>
 
           <p>
